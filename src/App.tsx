@@ -103,6 +103,17 @@ export default function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Ensure DOM class is always in sync with theme state
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [theme]);
+
   // Initial Load: Theme, Language, and Auto-Restore Login Session
   useEffect(() => {
     const loadedTheme = getStoredTheme();

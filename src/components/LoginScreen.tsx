@@ -370,7 +370,7 @@ export function LoginScreen({
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 bg-slate-950 text-slate-100 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative overflow-hidden transition-colors">
       {/* Subtle Background Glows */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -382,10 +382,10 @@ export function LoginScreen({
             ₹
           </div>
           <div>
-            <span className="font-extrabold text-base tracking-tight text-white">
+            <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
               {lang === 'hi' ? 'डिजिटल हिसाब' : 'Digital Hisaab'}
             </span>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
               {lang === 'hi' ? 'सुरक्षित खाता व ब्याज बही' : 'Secure Khata & Interest Ledger'}
             </p>
           </div>
@@ -395,28 +395,28 @@ export function LoginScreen({
           <button
             type="button"
             onClick={onToggleLang}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white transition cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer shadow-2xs"
           >
-            <Languages className="w-3.5 h-3.5 text-amber-400" />
+            <Languages className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             <span>{lang === 'hi' ? 'English' : 'हिंदी'}</span>
           </button>
 
           <button
             type="button"
             onClick={onToggleTheme}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer"
+            className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer shadow-2xs"
             title="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
         </div>
       </div>
 
       {/* Main Authentication Card */}
-      <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-10">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl z-10 transition-colors">
         {/* Navigation Tabs (Login / Register) */}
         {mode !== 'forgot' && (
-          <div className="grid grid-cols-2 p-1 bg-slate-950/80 rounded-2xl mb-6 border border-slate-800/80">
+          <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-950/80 rounded-2xl mb-6 border border-slate-200 dark:border-slate-800/80">
             <button
               id="tab-mode-login"
               type="button"
@@ -427,8 +427,8 @@ export function LoginScreen({
               }}
               className={`py-2.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 mode === 'login'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <LogIn className="w-3.5 h-3.5" />
@@ -445,8 +445,8 @@ export function LoginScreen({
               }}
               className={`py-2.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 mode === 'register'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
@@ -458,10 +458,10 @@ export function LoginScreen({
         {/* Title for Forgot Password */}
         {mode === 'forgot' && (
           <div className="mb-6">
-            <h2 className="text-xl font-black text-white">
+            <h2 className="text-xl font-black text-slate-900 dark:text-white">
               {lang === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password'}
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {lang === 'hi'
                 ? 'सुरक्षा प्रश्नों के उत्तर देकर नया पासवर्ड बनाएं।'
                 : 'Answer your security questions to create a new password.'}
@@ -471,15 +471,15 @@ export function LoginScreen({
 
         {/* Alerts / Error & Success */}
         {errorMessage && (
-          <div className="mb-4 p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs font-semibold flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-4 p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs font-semibold flex items-start gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-start gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
             <span>{successMessage}</span>
           </div>
         )}
@@ -488,7 +488,7 @@ export function LoginScreen({
         {mode === 'login' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                 {lang === 'hi' ? 'मोबाइल नंबर / यूजरनेम' : 'Mobile / Username'} *
               </label>
               <div className="relative">
@@ -502,14 +502,14 @@ export function LoginScreen({
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder={lang === 'hi' ? 'उदा. 9876543210 या rahul' : 'e.g. 9876543210 or username'}
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-700 bg-slate-950 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   {lang === 'hi' ? 'पासवर्ड (Password)' : 'Password'} *
                 </label>
                 <button
@@ -520,7 +520,7 @@ export function LoginScreen({
                     setErrorMessage(null);
                     setSuccessMessage(null);
                   }}
-                  className="text-xs text-amber-400 hover:underline font-semibold cursor-pointer"
+                  className="text-xs text-amber-600 dark:text-amber-400 hover:underline font-semibold cursor-pointer"
                 >
                   {lang === 'hi' ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}
                 </button>
@@ -536,12 +536,12 @@ export function LoginScreen({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-11 py-3 rounded-2xl border border-slate-700 bg-slate-950 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                  className="w-full pl-10 pr-11 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -573,7 +573,7 @@ export function LoginScreen({
         {mode === 'register' && (
           <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'hi' ? 'पूरा नाम (Full Name)' : 'Full Name'} *
               </label>
               <input
@@ -583,12 +583,12 @@ export function LoginScreen({
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder={lang === 'hi' ? 'उदा. राहुल शर्मा' : 'e.g. Rahul Sharma'}
-                className="w-full px-3.5 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                className="w-full px-3.5 py-2 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'hi' ? 'मोबाइल नंबर / यूजरनेम' : 'Mobile / Username'} *
               </label>
               <input
@@ -598,13 +598,13 @@ export function LoginScreen({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="9876543210"
-                className="w-full px-3.5 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                className="w-full px-3.5 py-2 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'hi' ? 'पासवर्ड (Min 4)' : 'Password'} *
                 </label>
                 <input
@@ -615,11 +615,11 @@ export function LoginScreen({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-950 text-xs text-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'hi' ? 'पुष्टि पासवर्ड' : 'Confirm'} *
                 </label>
                 <input
@@ -630,14 +630,14 @@ export function LoginScreen({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-950 text-xs text-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
                 />
               </div>
             </div>
 
             {/* Security Questions */}
-            <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                 <HelpCircle className="w-3.5 h-3.5" />
                 <span>{lang === 'hi' ? 'सुरक्षा प्रश्न (पासवर्ड रिकवरी)' : 'Security Questions'}</span>
               </div>
@@ -646,7 +646,7 @@ export function LoginScreen({
                 <select
                   value={question1}
                   onChange={(e) => setQuestion1(e.target.value)}
-                  className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 mb-1 focus:outline-none"
+                  className="w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 mb-1 focus:outline-none"
                 >
                   {SECURITY_QUESTIONS_1.map((q) => (
                     <option key={q} value={q}>
@@ -660,7 +660,7 @@ export function LoginScreen({
                   value={answer1}
                   onChange={(e) => setAnswer1(e.target.value)}
                   placeholder={lang === 'hi' ? 'उत्तर 1 दर्ज करें...' : 'Answer 1...'}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-950 text-xs text-white"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -668,7 +668,7 @@ export function LoginScreen({
                 <select
                   value={question2}
                   onChange={(e) => setQuestion2(e.target.value)}
-                  className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 mb-1 focus:outline-none"
+                  className="w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 mb-1 focus:outline-none"
                 >
                   {SECURITY_QUESTIONS_2.map((q) => (
                     <option key={q} value={q}>
@@ -682,7 +682,7 @@ export function LoginScreen({
                   value={answer2}
                   onChange={(e) => setAnswer2(e.target.value)}
                   placeholder={lang === 'hi' ? 'उत्तर 2 दर्ज करें...' : 'Answer 2...'}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-950 text-xs text-white"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -714,7 +714,7 @@ export function LoginScreen({
             {forgotStep === 'username' && (
               <form onSubmit={handleForgotLookupSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     {lang === 'hi' ? 'पंजीकृत मोबाइल / यूजरनेम दर्ज करें' : 'Enter Registered Mobile / Username'} *
                   </label>
                   <input
@@ -723,7 +723,7 @@ export function LoginScreen({
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="9876543210"
-                    className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-700 bg-slate-950 text-sm text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
@@ -738,29 +738,29 @@ export function LoginScreen({
 
             {forgotStep === 'questions' && (
               <form onSubmit={handleForgotResetSubmit} className="space-y-3">
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
                   <div>
-                    <label className="block text-[11px] font-bold text-amber-400 mb-0.5">{forgotQ1}</label>
+                    <label className="block text-[11px] font-bold text-amber-600 dark:text-amber-400 mb-0.5">{forgotQ1}</label>
                     <input
                       type="text"
                       required
                       value={forgotA1}
                       onChange={(e) => setForgotA1(e.target.value)}
                       placeholder={lang === 'hi' ? 'आपका उत्तर...' : 'Your answer...'}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-xs text-white"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
                     />
                   </div>
 
                   {forgotQ2 && (
                     <div>
-                      <label className="block text-[11px] font-bold text-amber-400 mb-0.5">{forgotQ2}</label>
+                      <label className="block text-[11px] font-bold text-amber-600 dark:text-amber-400 mb-0.5">{forgotQ2}</label>
                       <input
                         type="text"
                         required
                         value={forgotA2}
                         onChange={(e) => setForgotA2(e.target.value)}
                         placeholder={lang === 'hi' ? 'आपका उत्तर...' : 'Your answer...'}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-xs text-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
                       />
                     </div>
                   )}
@@ -768,7 +768,7 @@ export function LoginScreen({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {lang === 'hi' ? 'नया पासवर्ड' : 'New Password'}
                     </label>
                     <input
@@ -778,11 +778,11 @@ export function LoginScreen({
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••"
-                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-700 bg-slate-950 text-xs text-white"
+                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {lang === 'hi' ? 'पुष्टि करें' : 'Confirm'}
                     </label>
                     <input
@@ -792,7 +792,7 @@ export function LoginScreen({
                       value={confirmNewPassword}
                       onChange={(e) => setConfirmNewPassword(e.target.value)}
                       placeholder="••••"
-                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-700 bg-slate-950 text-xs text-white"
+                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -815,7 +815,7 @@ export function LoginScreen({
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                className="text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
+                className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
               >
                 {lang === 'hi' ? '← लॉगिन पेज पर वापस जाएं' : '← Back to Sign In'}
               </button>
@@ -828,10 +828,10 @@ export function LoginScreen({
           <>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-800" />
+                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-slate-900 px-3 text-slate-500 font-bold uppercase">
+                <span className="bg-white dark:bg-slate-900 px-3 text-slate-400 dark:text-slate-500 font-bold uppercase">
                   {lang === 'hi' ? 'अन्य विकल्प' : 'or choose'}
                 </span>
               </div>
@@ -843,7 +843,7 @@ export function LoginScreen({
               type="button"
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="w-full py-2.5 px-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs flex items-center justify-center gap-2.5 transition active:scale-98 cursor-pointer disabled:opacity-50 shadow-md mb-2.5"
+              className="w-full py-2.5 px-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 dark:border-transparent font-bold text-xs flex items-center justify-center gap-2.5 transition active:scale-98 cursor-pointer disabled:opacity-50 shadow-xs mb-2.5"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -873,10 +873,10 @@ export function LoginScreen({
                 type="button"
                 onClick={handleDemoLogin}
                 disabled={isLoading}
-                className="py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                 title="Open Demo Account with Sample Data"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>{lang === 'hi' ? 'डेमो खाता' : 'Demo Account'}</span>
               </button>
 
@@ -885,10 +885,10 @@ export function LoginScreen({
                 type="button"
                 onClick={handleGuestLogin}
                 disabled={isLoading}
-                className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                 title="Continue as Guest (Local Offline)"
               >
-                <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                <UserIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>{lang === 'hi' ? 'अतिथि मोड' : 'Guest Mode'}</span>
               </button>
             </div>
@@ -897,7 +897,7 @@ export function LoginScreen({
       </div>
 
       {/* Footer Security Badge */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-6 z-10">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-6 z-10">
         <ShieldCheck className="w-4 h-4 text-emerald-500" />
         <span>
           {lang === 'hi'

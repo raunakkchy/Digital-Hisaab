@@ -964,10 +964,14 @@ export function getStoredTheme(): ThemeMode {
 export function setStoredTheme(theme: ThemeMode): void {
   try {
     localStorage.setItem(STORAGE_KEY_THEME, theme);
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (typeof document !== 'undefined') {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.body?.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body?.classList.remove('dark');
+      }
     }
   } catch (err) {
     console.error('Error saving theme', err);
