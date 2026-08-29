@@ -24,6 +24,8 @@ import {
   AlertCircle,
   RefreshCw,
   PlusCircle,
+  Eye,
+  Printer,
 } from 'lucide-react';
 import { PersonHisaab, Language, MonthlyInterestRecord } from '../types';
 import {
@@ -43,6 +45,7 @@ interface PersonDetailsModalProps {
   onEdit: (person: PersonHisaab) => void;
   onDelete: (person: PersonHisaab) => void;
   onToggleStatus: (person: PersonHisaab) => void;
+  onPreviewPdf?: (person: PersonHisaab) => void;
   onPayInterest?: (
     personId: string,
     monthRecordId: string,
@@ -64,6 +67,7 @@ export function PersonDetailsModal({
   onEdit,
   onDelete,
   onToggleStatus,
+  onPreviewPdf,
   onPayInterest,
   onToggleInterestRecord,
 }: PersonDetailsModalProps) {
@@ -213,6 +217,18 @@ export function PersonDetailsModal({
           </div>
 
           <div className="flex items-center gap-1">
+            {onPreviewPdf && (
+              <button
+                id="btn-preview-slip-header"
+                type="button"
+                onClick={() => onPreviewPdf(person)}
+                className="text-rose-600 dark:text-rose-400 hover:text-rose-700 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition flex items-center gap-1 text-xs font-bold"
+                title={lang === 'hi' ? 'PDF वाउचर प्रिव्यू व प्रिंट' : 'Preview PDF Voucher'}
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">{lang === 'hi' ? 'PDF प्रिव्यू' : 'PDF Preview'}</span>
+              </button>
+            )}
             <button
               id="btn-share-details"
               type="button"
@@ -772,25 +788,39 @@ export function PersonDetailsModal({
           </button>
 
           {/* Export Actions for Person */}
-          <div className="grid grid-cols-2 gap-2.5 pt-1">
-            <button
-              id="btn-export-person-pdf"
-              type="button"
-              onClick={() => exportPersonPdf(person)}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold transition cursor-pointer"
-            >
-              <FileDown className="w-4 h-4 text-rose-500" />
-              <span>{t.exportPersonPdf}</span>
-            </button>
-            <button
-              id="btn-export-person-csv"
-              type="button"
-              onClick={() => exportPersonCsv(person)}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold transition cursor-pointer"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>{t.exportPersonCsv}</span>
-            </button>
+          <div className="space-y-2 pt-1">
+            {onPreviewPdf && (
+              <button
+                id="btn-preview-person-pdf-main"
+                type="button"
+                onClick={() => onPreviewPdf(person)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/60 text-xs sm:text-sm font-bold transition cursor-pointer shadow-2xs"
+              >
+                <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                <span>{lang === 'hi' ? 'PDF वाउचर प्रिव्यू व प्रिंट (Preview & Print Slip)' : 'Preview & Print Voucher PDF'}</span>
+              </button>
+            )}
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                id="btn-export-person-pdf"
+                type="button"
+                onClick={() => exportPersonPdf(person)}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold transition cursor-pointer"
+              >
+                <FileDown className="w-4 h-4 text-rose-500" />
+                <span>{t.exportPersonPdf}</span>
+              </button>
+              <button
+                id="btn-export-person-csv"
+                type="button"
+                onClick={() => exportPersonCsv(person)}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold transition cursor-pointer"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <span>{t.exportPersonCsv}</span>
+              </button>
+            </div>
           </div>
         </div>
 

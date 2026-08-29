@@ -8,6 +8,7 @@ import {
   Clock,
   PieChart,
   Percent,
+  Eye,
 } from 'lucide-react';
 import { PersonHisaab, Language, DashboardStats } from '../types';
 import { formatCurrency, i18n } from '../utils/formatters';
@@ -18,9 +19,16 @@ interface ReportsViewProps {
   stats: DashboardStats;
   lang: Language;
   onViewPerson: (person: PersonHisaab) => void;
+  onPreviewFullReport?: () => void;
 }
 
-export function ReportsView({ persons, stats, lang, onViewPerson }: ReportsViewProps) {
+export function ReportsView({
+  persons,
+  stats,
+  lang,
+  onViewPerson,
+  onPreviewFullReport,
+}: ReportsViewProps) {
   const t = i18n[lang];
 
   const total = stats.totalAmount || 1; // avoid / 0
@@ -52,7 +60,20 @@ export function ReportsView({ persons, stats, lang, onViewPerson }: ReportsViewP
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {onPreviewFullReport && (
+            <button
+              id="btn-reports-preview-pdf"
+              type="button"
+              onClick={onPreviewFullReport}
+              disabled={persons.length === 0}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 dark:hover:bg-rose-950/80 disabled:opacity-50 transition shadow-2xs cursor-pointer"
+            >
+              <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+              <span>{lang === 'hi' ? 'PDF प्रिव्यू (Preview)' : 'PDF Preview'}</span>
+            </button>
+          )}
+
           <button
             id="btn-reports-pdf"
             type="button"

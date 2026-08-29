@@ -95,9 +95,9 @@ export function exportPersonCsv(person: PersonHisaab): void {
 }
 
 /**
- * Generate and download Full PDF report
+ * Generate Full PDF jsPDF Document object
  */
-export function exportAllPdf(persons: PersonHisaab[]): void {
+export function generateAllPdfDoc(persons: PersonHisaab[]): jsPDF {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -240,13 +240,13 @@ export function exportAllPdf(persons: PersonHisaab[]): void {
     doc.text('Authorized Hisaab Record', 160, 290);
   }
 
-  doc.save('digital_hisaab_full_report.pdf');
+  return doc;
 }
 
 /**
- * Generate and download Person-wise PDF report voucher
+ * Generate Person-wise PDF Voucher jsPDF Document object
  */
-export function exportPersonPdf(person: PersonHisaab): void {
+export function generatePersonPdfDoc(person: PersonHisaab): jsPDF {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -370,6 +370,40 @@ export function exportPersonPdf(person: PersonHisaab): void {
   doc.text('Giver Signature', 20, nextY + 27);
   doc.text('Receiver Signature', 88, nextY + 27);
 
+  return doc;
+}
+
+/**
+ * Get Blob URL for Full PDF
+ */
+export function getAllPdfBlobUrl(persons: PersonHisaab[]): string {
+  const doc = generateAllPdfDoc(persons);
+  const blob = doc.output('blob');
+  return URL.createObjectURL(blob);
+}
+
+/**
+ * Get Blob URL for Person PDF
+ */
+export function getPersonPdfBlobUrl(person: PersonHisaab): string {
+  const doc = generatePersonPdfDoc(person);
+  const blob = doc.output('blob');
+  return URL.createObjectURL(blob);
+}
+
+/**
+ * Generate and download Full PDF report
+ */
+export function exportAllPdf(persons: PersonHisaab[]): void {
+  const doc = generateAllPdfDoc(persons);
+  doc.save('digital_hisaab_full_report.pdf');
+}
+
+/**
+ * Generate and download Person-wise PDF report voucher
+ */
+export function exportPersonPdf(person: PersonHisaab): void {
+  const doc = generatePersonPdfDoc(person);
   const cleanName = person.name.replace(/[^a-zA-Z0-9_\u0900-\u097F]/g, '_').substring(0, 25);
   doc.save(`${cleanName || 'hisaab'}_voucher.pdf`);
 }

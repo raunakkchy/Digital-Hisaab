@@ -13,6 +13,8 @@ import {
   FileSpreadsheet,
   AlertCircle,
   MessageCircle,
+  Eye,
+  FileText,
 } from 'lucide-react';
 import { PersonHisaab, Language, DashboardStats } from '../types';
 import {
@@ -33,6 +35,8 @@ interface DashboardViewProps {
   onToggleStatus: (person: PersonHisaab) => void;
   onNavigateToPersons: (initialFilter?: 'pending' | 'paid' | 'all') => void;
   onLoadSample: () => void;
+  onPreviewFullReport?: () => void;
+  onPreviewPersonPdf?: (person: PersonHisaab) => void;
 }
 
 export function DashboardView({
@@ -44,6 +48,8 @@ export function DashboardView({
   onToggleStatus,
   onNavigateToPersons,
   onLoadSample,
+  onPreviewFullReport,
+  onPreviewPersonPdf,
 }: DashboardViewProps) {
   const t = i18n[lang];
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,7 +104,20 @@ export function DashboardView({
             </button>
 
             {persons.length > 0 && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                {onPreviewFullReport && (
+                  <button
+                    id="btn-dash-preview-pdf"
+                    type="button"
+                    onClick={onPreviewFullReport}
+                    className="flex items-center gap-1.5 px-3.5 py-3 rounded-2xl text-xs font-bold text-rose-200 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 backdrop-blur-xs transition cursor-pointer"
+                    title={lang === 'hi' ? 'PDF रिपोर्ट प्रिव्यू देखें' : 'Preview PDF Report'}
+                  >
+                    <Eye className="w-4 h-4 text-rose-400" />
+                    <span>{lang === 'hi' ? 'PDF प्रिव्यू' : 'Preview PDF'}</span>
+                  </button>
+                )}
+
                 <button
                   id="btn-dash-export-pdf"
                   type="button"

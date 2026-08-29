@@ -17,6 +17,7 @@ import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { TrashModal } from './components/TrashModal';
 import { LoginScreen } from './components/LoginScreen';
 import { AccountModal } from './components/AccountModal';
+import { PdfPreviewModal } from './components/PdfPreviewModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { PersonHisaab, ActiveTab, Language, ThemeMode, StatusFilterOption, AppUser } from './types';
 import {
@@ -87,6 +88,41 @@ export default function App() {
     isClearAll: false,
     isTrashAction: true,
   });
+
+  // 3.5. PDF Live Preview & Slip State
+  const [pdfPreviewState, setPdfPreviewState] = useState<{
+    isOpen: boolean;
+    title: string;
+    docType: 'person_voucher' | 'full_report';
+    person?: PersonHisaab | null;
+    persons?: PersonHisaab[];
+  }>({
+    isOpen: false,
+    title: '',
+    docType: 'full_report',
+    person: null,
+    persons: [],
+  });
+
+  const handlePreviewPersonPdf = (person: PersonHisaab) => {
+    setPdfPreviewState({
+      isOpen: true,
+      title: `${lang === 'hi' ? 'PDF वाउचर' : 'PDF Voucher'} - ${person.name}`,
+      docType: 'person_voucher',
+      person,
+      persons: [],
+    });
+  };
+
+  const handlePreviewFullReport = () => {
+    setPdfPreviewState({
+      isOpen: true,
+      title: lang === 'hi' ? 'पूर्ण हिसाब PDF रिपोर्ट प्रिव्यू' : 'Digital Hisaab Full PDF Report',
+      docType: 'full_report',
+      person: null,
+      persons: persons,
+    });
+  };
 
   // 4. Initial Filter for Persons list (when clicking card on dashboard)
   const [listStatusFilter, setListStatusFilter] = useState<StatusFilterOption>('all');
@@ -619,6 +655,8 @@ export default function App() {
             onToggleStatus={handleToggleStatus}
             onNavigateToPersons={handleNavigateToPersons}
             onLoadSample={handleLoadSample}
+            onPreviewFullReport={handlePreviewFullReport}
+            onPreviewPersonPdf={handlePreviewPersonPdf}
           />
         )}
 
@@ -637,6 +675,8 @@ export default function App() {
               setDeleteModal({ isOpen: true, person: p, isClearAll: false, isTrashAction: true })
             }
             onToggleStatus={handleToggleStatus}
+            onPreviewPersonPdf={handlePreviewPersonPdf}
+            onPreviewFullPdf={handlePreviewFullReport}
           />
         )}
 
@@ -646,6 +686,7 @@ export default function App() {
             stats={stats}
             lang={lang}
             onViewPerson={(p) => setDetailsPerson(p)}
+            onPreviewFullReport={handlePreviewFullReport}
           />
         )}
 
@@ -715,6 +756,7 @@ export default function App() {
           setDeleteModal({ isOpen: true, person: p, isClearAll: false, isTrashAction: true });
         }}
         onToggleStatus={handleToggleStatus}
+        onPreviewPdf={handlePreviewPersonPdf}
         onPayInterest={handlePayInterest}
         onToggleInterestRecord={handleToggleInterestRecord}
       />
@@ -758,6 +800,25 @@ export default function App() {
         lang={lang}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteModal({ isOpen: false, person: null, isClearAll: false, isTrashAction: true })}
+      />
+
+      {/* PDF Preview & Print Slip Modal */}
+      <PdfPreviewModal
+        isOpen={pdfPreviewState.isOpen}
+        title={pdfPreviewState.title}
+        docType={pdfPreviewState.docType}
+        person={pdfPreviewState.person}
+        persons={pdfPreviewState.persons || persons}
+        lang={lang}
+        onClose={() =>
+          setPdfPreviewState({
+            isOpen: false,
+            title: '',
+            docType: 'full_report',
+            person: null,
+            persons: [],
+          })
+        }
       />
 
       {/* Account Profile & Details Modal */}

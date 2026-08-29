@@ -15,6 +15,8 @@ import {
   ArrowUpDown,
   Filter,
   MessageCircle,
+  Printer,
+  FileText,
 } from 'lucide-react';
 import { PersonHisaab, Language, StatusFilterOption, DateFilterOption } from '../types';
 import {
@@ -38,6 +40,8 @@ interface PersonListViewProps {
   onEditPerson: (person: PersonHisaab) => void;
   onDeletePerson: (person: PersonHisaab) => void;
   onToggleStatus: (person: PersonHisaab) => void;
+  onPreviewPersonPdf?: (person: PersonHisaab) => void;
+  onPreviewFullPdf?: () => void;
 }
 
 export function PersonListView({
@@ -51,6 +55,8 @@ export function PersonListView({
   onEditPerson,
   onDeletePerson,
   onToggleStatus,
+  onPreviewPersonPdf,
+  onPreviewFullPdf,
 }: PersonListViewProps) {
   const t = i18n[lang];
 
@@ -139,6 +145,19 @@ export function PersonListView({
 
           {persons.length > 0 && (
             <>
+              {onPreviewFullPdf && (
+                <button
+                  id="btn-list-preview-pdf"
+                  type="button"
+                  onClick={onPreviewFullPdf}
+                  className="flex items-center gap-1 px-3 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 transition text-xs font-bold"
+                  title={lang === 'hi' ? 'PDF रिपोर्ट प्रिव्यू देखें' : 'Preview Full PDF Report'}
+                >
+                  <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                  <span className="hidden sm:inline">{lang === 'hi' ? 'PDF प्रिव्यू' : 'PDF Preview'}</span>
+                </button>
+              )}
+
               <button
                 id="btn-list-export-pdf"
                 type="button"
@@ -435,6 +454,21 @@ export function PersonListView({
                   </div>
 
                   <div className="flex items-center gap-1">
+                    {onPreviewPersonPdf && (
+                      <button
+                        id={`btn-card-pdf-preview-${person.id}`}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPreviewPersonPdf(person);
+                        }}
+                        className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 transition border border-rose-200 dark:border-rose-900/60"
+                        title={lang === 'hi' ? 'PDF वाउचर प्रिव्यू व प्रिंट' : 'Preview Voucher PDF'}
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
                     {person.mobile && (
                       <button
                         id={`btn-card-wa-${person.id}`}
@@ -602,6 +636,17 @@ export function PersonListView({
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-center">
                         <div className="inline-flex items-center gap-1.5">
+                          {onPreviewPersonPdf && (
+                            <button
+                              id={`btn-desktop-preview-${person.id}`}
+                              type="button"
+                              onClick={() => onPreviewPersonPdf(person)}
+                              className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                              title={lang === 'hi' ? 'PDF वाउचर प्रिव्यू व प्रिंट' : 'Preview Voucher PDF'}
+                            >
+                              <FileText className="w-4 h-4" />
+                            </button>
+                          )}
                           {person.mobile && (
                             <button
                               id={`btn-desktop-wa-${person.id}`}
