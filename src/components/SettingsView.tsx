@@ -61,7 +61,7 @@ export function SettingsView({
   const [importStatus, setImportStatus] = useState<string | null>(null);
 
   const handleExportBackup = () => {
-    exportBackupJSON();
+    exportBackupJSON(user?.uid, user?.displayName || user?.email || user?.phoneNumber || 'account');
   };
 
   const handleImportFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +72,7 @@ export function SettingsView({
     reader.onload = (event) => {
       const content = event.target?.result as string;
       if (content) {
-        const result = importBackupJSON(content);
+        const result = importBackupJSON(content, user?.uid);
         if (result.success) {
           setImportStatus(
             lang === 'hi'

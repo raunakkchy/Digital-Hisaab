@@ -1129,82 +1129,203 @@ export function exportBackupJSON(userId?: string | null, username?: string): voi
   URL.revokeObjectURL(url);
 }
 
+function parseFlexibleDate(dateVal: any): string {
+  if (!dateVal) return new Date().toISOString().split('T')[0];
+  const str = String(dateVal).trim();
+
+  // Format: YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  // Format: DD-MM-YYYY or DD/MM/YYYY or DD.MM.YYYY
+  const dmyMatch = str.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  // Format: YYYY/MM/DD
+  const ymdMatch = str.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (ymdMatch) {
+    const year = ymdMatch[1];
+    const month = ymdMatch[2].padStart(2, '0');
+    const day = ymdMatch[3].padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Check if standard JS Date parses
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split('T')[0];
+  }
+
+  return new Date().toISOString().split('T')[0];
+}
+
+function parseFlexibleNumber(val: any): number {
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  const cleaned = String(val).replace(/[^0-9.-]/g, '');
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+}
+
 export function importBackupJSON(
   jsonStr: string,
   userId?: string | null
-): { success: boolean; count?: number; error?: string } {
+): { success: boolean; count?: number; error?: string; persons?: PersonHisaab[] } {
   try {
     const parsed = JSON.parse(jsonStr);
-    let itemsToImport: PersonHisaab[] = [];
+    let itemsToImport: any[] = [];
 
     if (Array.isArray(parsed)) {
       itemsToImport = parsed;
     } else if (parsed && Array.isArray(parsed.persons)) {
       itemsToImport = parsed.persons;
+    } else if (parsed && typeof parsed === 'object') {
+      // Single item or object with list
+      const possibleArray = Object.values(parsed).find((v) => Array.isArray(v));
+      if (possibleArray && Array.isArray(possibleArray)) {
+        itemsToImport = possibleArray;
+      } else {
+        itemsToImport = [parsed];
+      }
     } else {
       return { success: false, error: 'Invalid backup file format' };
     }
 
     const validItems: PersonHisaab[] = [];
     for (const item of itemsToImport) {
-      if (item && item.name && typeof item.principalAmount === 'number') {
-        const denaDate = item.denaDate || new Date().toISOString().split('T')[0];
-        const status = item.status === 'paid' ? 'paid' : 'pending';
-        const paidDate = item.paidDate;
-        const paymentMode = item.paymentMode || 'standard';
+      if (!item || typeof item !== 'object') continue;
 
-        const {
-          monthlyInterest,
-          completedMonths,
-          totalMonths,
-          interestAmount,
-          totalAmount,
-          interestRecords,
-          totalInterestPaid,
-          currentInterestDue,
-        } = calculateHisaab(
-          item.principalAmount,
-          item.rate || 0,
-          denaDate,
-          status,
-          paidDate,
-          paymentMode,
-          item.interestRecords || []
-        );
+      // Extract Name (flexible key names)
+      const rawName =
+        item.name ||
+        item.NAME ||
+        item.Name ||
+        item.personName ||
+        item.Person ||
+        item.customerName ||
+        item.customer;
+      if (!rawName) continue;
 
-        validItems.push({
-          id: item.id || 'hisaab_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-          name: String(item.name).trim(),
-          mobile: item.mobile ? String(item.mobile).trim() : '',
-          rate: Number(item.rate) || 0,
-          denaDate,
-          principalAmount: Number(item.principalAmount) || 0,
-          paymentMode,
-          monthlyInterest,
-          completedMonths,
-          totalMonths,
-          interestAmount,
-          totalAmount,
-          status,
-          paidDate,
-          interestRecords: paymentMode === 'interest_only' ? (interestRecords || item.interestRecords) : item.interestRecords,
-          interestPayments: item.interestPayments || [],
-          totalInterestPaid: paymentMode === 'interest_only' ? totalInterestPaid : item.totalInterestPaid,
-          currentInterestDue: paymentMode === 'interest_only' ? currentInterestDue : item.currentInterestDue,
-          lastInterestPaidDate: item.lastInterestPaidDate,
-          note: item.note ? String(item.note) : '',
-          createdAt: item.createdAt || new Date().toISOString(),
-          updatedAt: item.updatedAt || new Date().toISOString(),
-        });
-      }
+      // Extract Principal Amount
+      const rawAmount =
+        item.principalAmount !== undefined
+          ? item.principalAmount
+          : item.AMOUNT !== undefined
+          ? item.AMOUNT
+          : item.amount !== undefined
+          ? item.amount
+          : item.principal !== undefined
+          ? item.principal
+          : item.Amount;
+      const principalAmount = parseFlexibleNumber(rawAmount);
+      if (principalAmount <= 0) continue;
+
+      // Extract Rate / Percentage
+      const rawRate =
+        item.rate !== undefined
+          ? item.rate
+          : item.PERCENTEGE !== undefined
+          ? item.PERCENTEGE
+          : item.percentage !== undefined
+          ? item.percentage
+          : item.PERCENTAGE !== undefined
+          ? item.PERCENTAGE
+          : item.Rate !== undefined
+          ? item.Rate
+          : item.interestRate;
+      const rate = parseFlexibleNumber(rawRate);
+
+      // Extract Date
+      const rawDate =
+        item.denaDate ||
+        item.DATE ||
+        item.date ||
+        item.startDate ||
+        item.Date ||
+        item.givenDate;
+      const denaDate = parseFlexibleDate(rawDate);
+
+      // Extract Status & Mode
+      const rawStatus = (item.status || item.STATUS || 'pending').toLowerCase();
+      const status: 'pending' | 'paid' = rawStatus === 'paid' ? 'paid' : 'pending';
+      const paidDate = item.paidDate ? parseFlexibleDate(item.paidDate) : undefined;
+      const paymentMode = item.paymentMode === 'interest_only' ? 'interest_only' : 'standard';
+
+      // Extract Mobile, Note, ID
+      const mobile = item.mobile || item.MOBILE || item.phone || item.Phone || '';
+      const note = item.note || item.NOTE || item.remarks || item.Remarks || '';
+      const id =
+        item.id || 'hisaab_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+
+      const {
+        monthlyInterest,
+        completedMonths,
+        totalMonths,
+        interestAmount,
+        totalAmount,
+        interestRecords,
+        totalInterestPaid,
+        currentInterestDue,
+      } = calculateHisaab(
+        principalAmount,
+        rate,
+        denaDate,
+        status,
+        paidDate,
+        paymentMode,
+        item.interestRecords || []
+      );
+
+      validItems.push({
+        id,
+        name: String(rawName).trim(),
+        mobile: String(mobile).trim(),
+        rate,
+        denaDate,
+        principalAmount,
+        paymentMode,
+        monthlyInterest,
+        completedMonths,
+        totalMonths,
+        interestAmount,
+        totalAmount,
+        status,
+        paidDate,
+        interestRecords: paymentMode === 'interest_only' ? interestRecords || item.interestRecords : item.interestRecords,
+        interestPayments: item.interestPayments || [],
+        totalInterestPaid: paymentMode === 'interest_only' ? totalInterestPaid : item.totalInterestPaid,
+        currentInterestDue: paymentMode === 'interest_only' ? currentInterestDue : item.currentInterestDue,
+        lastInterestPaidDate: item.lastInterestPaidDate,
+        note: String(note),
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString(),
+      });
     }
 
     if (validItems.length === 0) {
       return { success: false, error: 'No valid hisaab records found in backup' };
     }
 
-    savePersons(validItems, userId);
-    return { success: true, count: validItems.length };
+    // Save to user storage (replacing or merging)
+    const existing = getPersons(userId);
+    // If existing has items, merge them by ID so nothing is lost
+    const mergedMap = new Map<string, PersonHisaab>();
+    for (const p of existing) {
+      mergedMap.set(p.id, p);
+    }
+    for (const p of validItems) {
+      mergedMap.set(p.id, p);
+    }
+    const finalPersons = Array.from(mergedMap.values());
+
+    savePersons(finalPersons, userId);
+    return { success: true, count: validItems.length, persons: finalPersons };
   } catch {
     return { success: false, error: 'Failed to read JSON file' };
   }

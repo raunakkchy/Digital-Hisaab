@@ -655,9 +655,14 @@ export default function App() {
             onToggleTheme={handleToggleTheme}
             lang={lang}
             onSetLang={handleSetLang}
-            onDataRestored={() => {
-              setPersons(getPersons(user.uid));
-              setTrashPersons(getTrashPersons(user.uid));
+            onDataRestored={async () => {
+              const userId = user?.uid;
+              const updatedPersons = getPersons(userId);
+              setPersons(updatedPersons);
+              setTrashPersons(getTrashPersons(userId));
+              if (userId) {
+                await syncAllLocalToCloud(userId, updatedPersons);
+              }
               addToast('success', i18n[lang].toastBackupRestored);
             }}
             onRequestClearAll={() =>
