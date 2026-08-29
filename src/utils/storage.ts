@@ -1,5 +1,10 @@
 import { PersonHisaab, ThemeMode, Language, LocalAccount, AppUser } from '../types';
 import { calculateHisaab } from './formatters';
+import {
+  saveAccountToCloud,
+  getAccountFromCloud,
+  ensureFirebaseAuth,
+} from '../lib/firebase';
 
 const STORAGE_KEY_THEME = 'simple_hisaab_theme';
 const STORAGE_KEY_LANG = 'simple_hisaab_lang';
@@ -40,7 +45,7 @@ export async function hashPasswordWithSalt(password: string, salt: string): Prom
 }
 
 // -------------------------------------------------------------
-// LOCAL ACCOUNTS & AUTH MANAGEMENT
+// LOCAL & CLOUD ACCOUNTS & AUTH MANAGEMENT (Multi-Device Login)
 // -------------------------------------------------------------
 
 export function getStoredAccounts(): LocalAccount[] {
@@ -64,7 +69,8 @@ export function saveStoredAccounts(accounts: LocalAccount[]): void {
 }
 
 /**
- * Register a new user account with secure password hashing and 2 Security Questions
+ * Register a new user account with secure password hashing and 2 Security Questions.
+ * Saves locally AND to Firestore Cloud `/accounts/{username}` so user can log in from any device.
  */
 export async function registerLocalAccount(
   username: string,
@@ -85,10 +91,24 @@ export async function registerLocalAccount(
     return { success: false, error: 'Password must be at least 4 characters long.' };
   }
 
+  // Check local cache
   const accounts = getStoredAccounts();
-  const existing = accounts.find((a) => a.username.toLowerCase() === cleanUsername);
-  if (existing) {
+  const existingLocal = accounts.find((a) => a.username.toLowerCase() === cleanUsername);
+  if (existingLocal) {
     return { success: false, error: 'An account with this Mobile Number/Username already exists.' };
+  }
+
+  // Check Firestore Cloud for existing account from another device
+  try {
+    const cloudAccount = await getAccountFromCloud(cleanUsername);
+    if (cloudAccount) {
+      // Cache it locally
+      accounts.push(cloudAccount);
+      saveStoredAccounts(accounts);
+      return { success: false, error: 'An account with this Mobile Number/Username already exists on another device.' };
+    }
+  } catch (err) {
+    console.warn('Cloud account check info:', err);
   }
 
   const salt = generateSalt();
@@ -104,8 +124,9 @@ export async function registerLocalAccount(
     securityAnswer2Hash = await hashPasswordWithSalt(securityAnswer2.trim().toLowerCase(), salt);
   }
 
+  // Create persistent deterministic or unique ID for this user account
   const newAccount: LocalAccount = {
-    id: 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    id: 'user_' + cleanUsername.replace(/[^a-zA-Z0-9]/g, '_') + '_' + Date.now().toString(36),
     username: cleanUsername,
     displayName: cleanDisplay,
     passwordHash,
@@ -124,19 +145,42 @@ export async function registerLocalAccount(
 
   accounts.push(newAccount);
   saveStoredAccounts(accounts);
+
+  // Sync account metadata to Firestore Cloud so mobile, laptop & tablet can all authenticate
+  try {
+    await saveAccountToCloud(newAccount);
+  } catch (err) {
+    console.warn('Cloud save account info:', err);
+  }
+
   return { success: true, account: newAccount };
 }
 
 /**
- * Authenticate user with Mobile/Username and Password
+ * Authenticate user with Mobile/Username and Password.
+ * Supports simultaneous multi-device login (Mobile, Laptop, Tablet) by querying Cloud if not cached locally.
  */
 export async function authenticateLocalAccount(
   username: string,
   pass: string
 ): Promise<{ success: boolean; account?: LocalAccount; error?: string; notFound?: boolean }> {
   const cleanUsername = username.trim().toLowerCase();
-  const accounts = getStoredAccounts();
-  const account = accounts.find((a) => a.username.toLowerCase() === cleanUsername);
+  let accounts = getStoredAccounts();
+  let account = accounts.find((a) => a.username.toLowerCase() === cleanUsername);
+
+  // If not found in local cache (e.g. logging in from laptop for first time), check Cloud Firestore
+  if (!account) {
+    try {
+      const cloudAcc = await getAccountFromCloud(cleanUsername);
+      if (cloudAcc) {
+        account = cloudAcc;
+        accounts = [...accounts.filter((a) => a.username.toLowerCase() !== cleanUsername), cloudAcc];
+        saveStoredAccounts(accounts);
+      }
+    } catch (err) {
+      console.warn('Cloud auth lookup warning:', err);
+    }
+  }
 
   if (!account) {
     return { success: false, error: 'Account not found with this Mobile/Username.', notFound: true };
@@ -144,6 +188,20 @@ export async function authenticateLocalAccount(
 
   const testHash = await hashPasswordWithSalt(pass, account.salt);
   if (testHash !== account.passwordHash) {
+    // If local hash failed, re-check cloud in case password was updated on another device
+    try {
+      const freshCloudAcc = await getAccountFromCloud(cleanUsername);
+      if (freshCloudAcc && freshCloudAcc.passwordHash !== account.passwordHash) {
+        account = freshCloudAcc;
+        const testFresh = await hashPasswordWithSalt(pass, freshCloudAcc.salt);
+        if (testFresh === freshCloudAcc.passwordHash) {
+          saveStoredAccounts([...accounts.filter((a) => a.username.toLowerCase() !== cleanUsername), freshCloudAcc]);
+          return { success: true, account: freshCloudAcc };
+        }
+      }
+    } catch {
+      // ignore
+    }
     return { success: false, error: 'Incorrect password. Please try again.' };
   }
 
@@ -163,8 +221,20 @@ export async function smartLoginOrAutoRegister(
   const cleanPass = pass || '1234';
   const cleanName = displayName?.trim() || username.trim();
 
-  const accounts = getStoredAccounts();
-  const existing = accounts.find((a) => a.username.toLowerCase() === cleanUser);
+  let accounts = getStoredAccounts();
+  let existing = accounts.find((a) => a.username.toLowerCase() === cleanUser);
+
+  if (!existing) {
+    try {
+      const cloudAcc = await getAccountFromCloud(cleanUser);
+      if (cloudAcc) {
+        existing = cloudAcc;
+        saveStoredAccounts([...accounts, cloudAcc]);
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   if (existing) {
     const testHash = await hashPasswordWithSalt(cleanPass, existing.salt);
@@ -233,18 +303,32 @@ export async function createDemoAccount(): Promise<AppUser> {
 
 /**
  * Retrieve configured security questions for a given username/mobile
+ * Supports cloud lookup for devices accessing the account for the first time.
  */
-export function getAccountSecurityQuestions(username: string): {
+export async function getAccountSecurityQuestions(username: string): Promise<{
   found: boolean;
   question1?: string;
   question2?: string;
   hasTwoQuestions?: boolean;
-} {
+}> {
   const cleanUsername = username.trim().toLowerCase();
   if (!cleanUsername) return { found: false };
 
-  const accounts = getStoredAccounts();
-  const account = accounts.find((a) => a.username.toLowerCase() === cleanUsername);
+  let accounts = getStoredAccounts();
+  let account = accounts.find((a) => a.username.toLowerCase() === cleanUsername);
+
+  if (!account) {
+    try {
+      const cloudAcc = await getAccountFromCloud(cleanUsername);
+      if (cloudAcc) {
+        account = cloudAcc;
+        accounts = [...accounts.filter((a) => a.username.toLowerCase() !== cleanUsername), cloudAcc];
+        saveStoredAccounts(accounts);
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   if (!account) return { found: false };
 
@@ -262,6 +346,7 @@ export function getAccountSecurityQuestions(username: string): {
 
 /**
  * Reset password using 2 Security Questions & Answers (with backward compatibility)
+ * Updates both local cache and Cloud Firestore so new password works across all devices.
  */
 export async function resetPasswordWithTwoSecurityAnswers(
   username: string,
@@ -270,8 +355,21 @@ export async function resetPasswordWithTwoSecurityAnswers(
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
   const cleanUsername = username.trim().toLowerCase();
-  const accounts = getStoredAccounts();
-  const index = accounts.findIndex((a) => a.username.toLowerCase() === cleanUsername);
+  let accounts = getStoredAccounts();
+  let index = accounts.findIndex((a) => a.username.toLowerCase() === cleanUsername);
+
+  if (index === -1) {
+    try {
+      const cloudAcc = await getAccountFromCloud(cleanUsername);
+      if (cloudAcc) {
+        accounts.push(cloudAcc);
+        index = accounts.length - 1;
+        saveStoredAccounts(accounts);
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   if (index === -1) {
     return { success: false, error: 'Account not found with this Mobile/Username.' };
@@ -318,7 +416,7 @@ export async function resetPasswordWithTwoSecurityAnswers(
     newHash2 = await hashPasswordWithSalt(securityAnswer2.trim().toLowerCase(), newSalt);
   }
 
-  accounts[index] = {
+  const updatedAccount: LocalAccount = {
     ...account,
     passwordHash: newPasswordHash,
     salt: newSalt,
@@ -331,7 +429,16 @@ export async function resetPasswordWithTwoSecurityAnswers(
     updatedAt: new Date().toISOString(),
   };
 
+  accounts[index] = updatedAccount;
   saveStoredAccounts(accounts);
+
+  // Sync updated credentials to Cloud Firestore
+  try {
+    await saveAccountToCloud(updatedAccount);
+  } catch (err) {
+    console.warn('Cloud update account info:', err);
+  }
+
   return { success: true };
 }
 

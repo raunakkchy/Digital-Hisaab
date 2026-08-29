@@ -48,7 +48,11 @@ import {
   db,
   savePersonToCloud,
   deletePersonFromCloud,
+  saveTrashToCloud,
+  deleteTrashFromCloud,
   syncAllLocalToCloud,
+  syncAllTrashToCloud,
+  ensureFirebaseAuth,
   logOutFirebase,
 } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -147,13 +151,94 @@ export default function App() {
     }
   }, [user, isAuthRestored]);
 
-  // Firebase Auth State Listener & Real-time Cloud Sync (if using Google Auth)
+  // Firebase Auth State Listener & Real-time Cloud Sync for all devices & login methods
   const isSyncingRef = useRef(false);
-  useEffect(() => {
-    let unsubscribeSnapshot: (() => void) | null = null;
 
+  // 1. Silent Firebase Auth initialization for cloud operations
+  useEffect(() => {
+    ensureFirebaseAuth().catch((e) => console.warn('Auth init info:', e));
+  }, []);
+
+  // 2. Real-time Cloud Sync listener for current logged-in user (Mobile, Laptop, Tablet simultaneous sessions)
+  useEffect(() => {
+    if (!user || !user.uid) return;
+
+    let unsubscribePersons: (() => void) | null = null;
+    let unsubscribeTrash: (() => void) | null = null;
+
+    try {
+      // Real-time persons collection listener
+      const personsCollection = collection(db, 'users', user.uid, 'persons');
+      unsubscribePersons = onSnapshot(
+        personsCollection,
+        async (snapshot) => {
+          if (isSyncingRef.current) return;
+          const cloudPersons: PersonHisaab[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data() as PersonHisaab;
+            if (data && data.id) {
+              cloudPersons.push(data);
+            }
+          });
+
+          if (cloudPersons.length > 0) {
+            setPersons(cloudPersons);
+            savePersons(cloudPersons, user.uid); // cache locally for offline speed
+            // Update details modal in real-time if currently open
+            setDetailsPerson((prev) => {
+              if (!prev) return null;
+              const updated = cloudPersons.find((p) => p.id === prev.id);
+              return updated || null;
+            });
+          } else {
+            // If cloud is empty on first device sync, upload any existing local data
+            const localItems = getPersons(user.uid);
+            if (localItems.length > 0) {
+              isSyncingRef.current = true;
+              await syncAllLocalToCloud(user.uid, localItems);
+              isSyncingRef.current = false;
+            }
+          }
+        },
+        (error) => {
+          console.warn('Realtime cloud persons sync notice:', error);
+        }
+      );
+
+      // Real-time trash collection listener
+      const trashCollection = collection(db, 'users', user.uid, 'trash');
+      unsubscribeTrash = onSnapshot(
+        trashCollection,
+        (snapshot) => {
+          const cloudTrash: PersonHisaab[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data() as PersonHisaab;
+            if (data && data.id) {
+              cloudTrash.push(data);
+            }
+          });
+          if (cloudTrash.length > 0) {
+            setTrashPersons(cloudTrash);
+          }
+        },
+        (error) => {
+          console.warn('Realtime cloud trash sync notice:', error);
+        }
+      );
+    } catch (err) {
+      console.warn('Error setting up real-time multi-device listeners:', err);
+    }
+
+    return () => {
+      if (unsubscribePersons) unsubscribePersons();
+      if (unsubscribeTrash) unsubscribeTrash();
+    };
+  }, [user?.uid]);
+
+  // 3. Firebase Auth State Listener (for Google Sign-In users)
+  useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
-      if (firebaseUser) {
+      if (firebaseUser && firebaseUser.email) {
         const appUser: AppUser = {
           uid: firebaseUser.uid,
           displayName: firebaseUser.displayName,
@@ -163,48 +248,11 @@ export default function App() {
           providerId: firebaseUser.providerData?.[0]?.providerId || 'google.com',
         };
         setUser(appUser);
-
-        // Subscribe to real-time Firestore updates for this user's records
-        try {
-          const personsCollection = collection(db, 'users', firebaseUser.uid, 'persons');
-          unsubscribeSnapshot = onSnapshot(
-            personsCollection,
-            async (snapshot) => {
-              if (isSyncingRef.current) return;
-              const cloudPersons: PersonHisaab[] = [];
-              snapshot.forEach((doc) => {
-                const data = doc.data() as PersonHisaab;
-                cloudPersons.push(data);
-              });
-
-              if (cloudPersons.length > 0) {
-                setPersons(cloudPersons);
-                savePersons(cloudPersons, firebaseUser.uid); // update isolated local cache
-              } else {
-                // If cloud is empty but user had local items, auto-sync them to cloud
-                const localItems = getPersons(firebaseUser.uid);
-                if (localItems.length > 0) {
-                  isSyncingRef.current = true;
-                  await syncAllLocalToCloud(firebaseUser.uid, localItems);
-                  isSyncingRef.current = false;
-                }
-              }
-            },
-            (error) => {
-              console.warn('Firestore snapshot error:', error);
-            }
-          );
-        } catch (err) {
-          console.warn('Error setting up Firestore listener:', err);
-        }
       }
     });
 
     return () => {
       unsubscribeAuth();
-      if (unsubscribeSnapshot) {
-        unsubscribeSnapshot();
-      }
     };
   }, []);
 
@@ -230,7 +278,7 @@ export default function App() {
   // Computed Dashboard and Reports Statistics
   const stats = useMemo(() => calculateStats(persons), [persons]);
 
-  // Handle Add or Edit Save
+  // Handle Add or Edit Save (Syncs to Cloud Firestore across all devices)
   const handleSavePerson = async (
     data: Omit<PersonHisaab, 'id' | 'createdAt' | 'updatedAt' | 'interestAmount' | 'totalAmount'>
   ) => {
@@ -241,8 +289,8 @@ export default function App() {
       if (updated) {
         const nextList = getPersons(userId);
         setPersons(nextList);
-        if (user && user.providerId === 'google.com') {
-          savePersonToCloud(user.uid, updated).catch((e) => console.warn('Cloud sync error:', e));
+        if (userId) {
+          savePersonToCloud(userId, updated).catch((e) => console.warn('Cloud sync error:', e));
         }
         addToast('success', i18n[lang].toastUpdated);
         if (detailsPerson && detailsPerson.id === updated.id) {
@@ -254,8 +302,8 @@ export default function App() {
       const created = addPerson(data, userId);
       const nextList = getPersons(userId);
       setPersons(nextList);
-      if (user && user.providerId === 'google.com') {
-        savePersonToCloud(user.uid, created).catch((e) => console.warn('Cloud sync error:', e));
+      if (userId) {
+        savePersonToCloud(userId, created).catch((e) => console.warn('Cloud sync error:', e));
       }
       addToast('success', i18n[lang].toastAdded);
     }
@@ -271,8 +319,8 @@ export default function App() {
     if (updated) {
       const nextList = getPersons(userId);
       setPersons(nextList);
-      if (user && user.providerId === 'google.com') {
-        savePersonToCloud(user.uid, updated).catch((e) => console.warn('Cloud sync error:', e));
+      if (userId) {
+        savePersonToCloud(userId, updated).catch((e) => console.warn('Cloud sync error:', e));
       }
       if (detailsPerson && detailsPerson.id === updated.id) {
         setDetailsPerson(updated);
@@ -305,8 +353,8 @@ export default function App() {
     if (updated) {
       const nextList = getPersons(userId);
       setPersons(nextList);
-      if (user && user.providerId === 'google.com') {
-        savePersonToCloud(user.uid, updated).catch((e) => console.warn('Cloud sync error:', e));
+      if (userId) {
+        savePersonToCloud(userId, updated).catch((e) => console.warn('Cloud sync error:', e));
       }
       if (detailsPerson && detailsPerson.id === updated.id) {
         setDetailsPerson(updated);
@@ -326,8 +374,8 @@ export default function App() {
     if (updated) {
       const nextList = getPersons(userId);
       setPersons(nextList);
-      if (user && user.providerId === 'google.com') {
-        savePersonToCloud(user.uid, updated).catch((e) => console.warn('Cloud sync error:', e));
+      if (userId) {
+        savePersonToCloud(userId, updated).catch((e) => console.warn('Cloud sync error:', e));
       }
       if (detailsPerson && detailsPerson.id === updated.id) {
         setDetailsPerson(updated);
@@ -340,9 +388,12 @@ export default function App() {
   const handleConfirmDelete = async () => {
     const userId = user?.uid;
     if (deleteModal.isClearAll) {
-      if (user && user.providerId === 'google.com') {
+      if (userId) {
         for (const p of persons) {
-          deletePersonFromCloud(user.uid, p.id).catch(() => {});
+          deletePersonFromCloud(userId, p.id).catch(() => {});
+        }
+        for (const t of trashPersons) {
+          deleteTrashFromCloud(userId, t.id).catch(() => {});
         }
       }
       clearAllData(userId);
@@ -357,6 +408,10 @@ export default function App() {
       if (moved) {
         setPersons(getPersons(userId));
         setTrashPersons(getTrashPersons(userId));
+        if (userId) {
+          deletePersonFromCloud(userId, personId).catch(() => {});
+          saveTrashToCloud(userId, deleteModal.person).catch(() => {});
+        }
         if (detailsPerson && detailsPerson.id === personId) {
           setDetailsPerson(null);
         }
@@ -383,8 +438,9 @@ export default function App() {
       const updatedList = getPersons(userId);
       setPersons(updatedList);
       setTrashPersons(getTrashPersons(userId));
-      if (user && user.providerId === 'google.com') {
-        savePersonToCloud(user.uid, restored).catch((e) => console.warn('Cloud sync error:', e));
+      if (userId) {
+        savePersonToCloud(userId, restored).catch((e) => console.warn('Cloud sync error:', e));
+        deleteTrashFromCloud(userId, personId).catch(() => {});
       }
       addToast(
         'success',
@@ -401,9 +457,10 @@ export default function App() {
     const restoredList = restoreAllPersons(userId);
     setPersons(getPersons(userId));
     setTrashPersons(getTrashPersons(userId));
-    if (user && user.providerId === 'google.com') {
+    if (userId) {
       for (const p of restoredList) {
-        savePersonToCloud(user.uid, p).catch(() => {});
+        savePersonToCloud(userId, p).catch(() => {});
+        deleteTrashFromCloud(userId, p.id).catch(() => {});
       }
     }
     addToast(
@@ -418,8 +475,8 @@ export default function App() {
   const handlePermanentlyDeletePerson = async (personId: string) => {
     const userId = user?.uid;
     permanentlyDeletePerson(personId, userId);
-    if (user && user.providerId === 'google.com') {
-      deletePersonFromCloud(user.uid, personId).catch(() => {});
+    if (userId) {
+      deleteTrashFromCloud(userId, personId).catch(() => {});
     }
     setTrashPersons(getTrashPersons(userId));
     addToast(
@@ -433,6 +490,11 @@ export default function App() {
   // Empty entire trash
   const handleEmptyTrash = async () => {
     const userId = user?.uid;
+    if (userId) {
+      for (const t of trashPersons) {
+        deleteTrashFromCloud(userId, t.id).catch(() => {});
+      }
+    }
     emptyTrash(userId);
     setTrashPersons([]);
     addToast(
@@ -454,8 +516,8 @@ export default function App() {
     const userId = user?.uid;
     const samples = loadSampleData(userId);
     setPersons(samples);
-    if (user && user.providerId === 'google.com') {
-      await syncAllLocalToCloud(user.uid, samples);
+    if (userId) {
+      await syncAllLocalToCloud(userId, samples);
     }
     addToast('success', lang === 'hi' ? 'सैंपल डेटा लोड हो गया!' : 'Sample data loaded!');
   };

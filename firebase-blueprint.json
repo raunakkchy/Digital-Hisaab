@@ -10,6 +10,22 @@
         "updatedAt": { "type": "string", "required": true }
       }
     },
+    "Account": {
+      "collection": "accounts",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "username": { "type": "string", "required": true },
+        "displayName": { "type": "string", "required": true },
+        "passwordHash": { "type": "string", "required": true },
+        "salt": { "type": "string", "required": true },
+        "securityQuestion1": { "type": "string", "required": false },
+        "securityAnswer1Hash": { "type": "string", "required": false },
+        "securityQuestion2": { "type": "string", "required": false },
+        "securityAnswer2Hash": { "type": "string", "required": false },
+        "createdAt": { "type": "string", "required": true },
+        "updatedAt": { "type": "string", "required": true }
+      }
+    },
     "PersonHisaab": {
       "collection": "users/{userId}/persons",
       "fields": {

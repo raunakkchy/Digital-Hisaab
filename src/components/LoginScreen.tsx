@@ -227,7 +227,7 @@ export function LoginScreen({
   };
 
   // Step 1: Find Account for Password Reset
-  const handleForgotLookupSubmit = (e: FormEvent) => {
+  const handleForgotLookupSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     const cleanUser = username.trim();
@@ -236,19 +236,26 @@ export function LoginScreen({
       return;
     }
 
-    const sec = getAccountSecurityQuestions(cleanUser);
-    if (!sec.found) {
-      setErrorMessage(
-        lang === 'hi'
-          ? 'इस मोबाइल/यूजरनेम से कोई खाता नहीं मिला।'
-          : 'No account found with this Mobile/Username.'
-      );
-      return;
-    }
+    setIsLoading(true);
+    try {
+      const sec = await getAccountSecurityQuestions(cleanUser);
+      if (!sec.found) {
+        setErrorMessage(
+          lang === 'hi'
+            ? 'इस मोबाइल/यूजरनेम से कोई खाता नहीं मिला।'
+            : 'No account found with this Mobile/Username.'
+        );
+        return;
+      }
 
-    setForgotQ1(sec.question1 || SECURITY_QUESTIONS_1[0]);
-    setForgotQ2(sec.question2 || SECURITY_QUESTIONS_2[0]);
-    setForgotStep('questions');
+      setForgotQ1(sec.question1 || SECURITY_QUESTIONS_1[0]);
+      setForgotQ2(sec.question2 || SECURITY_QUESTIONS_2[0]);
+      setForgotStep('questions');
+    } catch {
+      setErrorMessage(lang === 'hi' ? 'खाता खोजने में त्रुटि हुई।' : 'Error looking up account.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step 2: Verify Answers & Set New Password

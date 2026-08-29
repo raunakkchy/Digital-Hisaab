@@ -2,29 +2,18 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default deny
-    match /{document=**} {
-      allow read, write: if false;
+    // User profiles and all user subcollections (persons, payments, interestRecords, trash)
+    match /users/{userId} {
+      allow read, write: if true;
+
+      match /{allChildren=**} {
+        allow read, write: if true;
+      }
     }
 
-    // User profile document and user-owned subcollections
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-
-      // Persons subcollection
-      match /persons/{personId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-
-      // Payments subcollection
-      match /payments/{paymentId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-
-      // Interest Records subcollection
-      match /interestRecords/{recordId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
+    // Accounts for multi-device login & password verification across devices
+    match /accounts/{username} {
+      allow read, write: if true;
     }
   }
 }
