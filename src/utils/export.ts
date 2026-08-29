@@ -116,12 +116,10 @@ export function exportAllPdf(persons: PersonHisaab[]): void {
   // Header Banner
   doc.setFillColor(30, 41, 59); // Dark slate
   doc.rect(0, 0, 210, 28, 'F');
-
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text('DIGITAL HISAAB MANAGEMENT SYSTEM', 14, 13);
-
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(203, 213, 225);
@@ -152,7 +150,6 @@ export function exportAllPdf(persons: PersonHisaab[]): void {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(22, 101, 52); // Green
   doc.text(`Paid: Rs. ${stats.totalPaidAmount.toLocaleString('en-IN')}`, 20, 60);
-
   doc.setTextColor(185, 28, 28); // Red
   doc.text(`Pending: Rs. ${stats.totalPendingAmount.toLocaleString('en-IN')}`, 115, 60);
 
@@ -265,12 +262,10 @@ export function exportPersonPdf(person: PersonHisaab): void {
   // Header Box
   doc.setFillColor(15, 23, 42); // deep navy
   doc.rect(0, 0, 148, 24, 'F');
-
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text('DIGITAL HISAAB MANAGEMENT', 12, 12);
-
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(203, 213, 225);
@@ -291,7 +286,6 @@ export function exportPersonPdf(person: PersonHisaab): void {
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.text(person.name, 16, 46);
-
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text(person.mobile || 'Not Provided', 80, 46);
@@ -356,17 +350,14 @@ export function exportPersonPdf(person: PersonHisaab): void {
     doc.setFillColor(254, 252, 232); // Light yellow note
     doc.setDrawColor(254, 240, 138);
     doc.roundedRect(12, nextY, 124, 18, 2, 2, 'FD');
-
     doc.setFontSize(8);
     doc.setTextColor(133, 77, 14);
     doc.setFont('helvetica', 'bold');
     doc.text('Note / Remarks:', 16, nextY + 5);
-
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     const splitNote = doc.splitTextToSize(person.note, 116);
     doc.text(splitNote, 16, nextY + 11);
-
     nextY += 24;
   }
 
@@ -374,7 +365,6 @@ export function exportPersonPdf(person: PersonHisaab): void {
   doc.setDrawColor(203, 213, 225);
   doc.line(16, nextY + 22, 55, nextY + 22);
   doc.line(85, nextY + 22, 124, nextY + 22);
-
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
   doc.text('Giver Signature', 20, nextY + 27);

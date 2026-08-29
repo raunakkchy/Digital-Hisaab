@@ -6,13 +6,12 @@ import { PersonHisaab, DashboardStats, Language, PaymentStatus, PaymentMode, Mon
  */
 export function getCompletedMonths(startDateStr: string, endDateStr?: string): number {
   if (!startDateStr) return 0;
-  
   const [sy, sm, sd] = startDateStr.split('-').map(Number);
   if (!sy || !sm || !sd) return 0;
-  
+
   const start = new Date(sy, sm - 1, sd);
   let end: Date;
-  
+
   if (endDateStr) {
     const [ey, em, ed] = endDateStr.split('-').map(Number);
     if (!ey || !em || !ed) {
@@ -31,7 +30,7 @@ export function getCompletedMonths(startDateStr: string, endDateStr?: string): n
   if (end < start) return 0;
 
   let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-  
+
   // If the end day of month is less than start day of month, this month is not completed yet
   if (end.getDate() < start.getDate()) {
     // Exception: If end date is the last day of month (e.g. Feb 28 for Jan 31)
@@ -74,6 +73,7 @@ export function subtractDaysFromDate(dateStr: string, daysToSub = 1): string {
   if (!dateStr) return '';
   const [y, m, d] = dateStr.split('-').map(Number);
   if (!y || !m || !d) return dateStr;
+
   const date = new Date(y, m - 1, d - daysToSub);
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -155,7 +155,6 @@ export function syncMonthlyInterestRecords(
     const dueDate = nextMonthDate;
 
     const existing = recordsMap.get(i);
-
     const monthLabel =
       lang === 'hi'
         ? `महीना ${i} (${formatDate(periodStart, 'hi')} - ${formatDate(periodEnd, 'hi')})`
@@ -164,7 +163,6 @@ export function syncMonthlyInterestRecords(
     if (existing) {
       const isRecordPaid = existing.status === 'paid';
       const paidAmount = isRecordPaid ? (existing.paidAmount ?? monthlyInterest) : undefined;
-
       const updatedRecord: MonthlyInterestRecord = {
         ...existing,
         id: existing.id || `month_rec_${i}_${Date.now()}`,
@@ -212,10 +210,10 @@ export function syncMonthlyInterestRecords(
 
 /**
  * Calculate Simple Interest and Current Total according to the formula:
- * - Monthly Interest = Principal × Rate / 100
+ * - Monthly Interest = Principal * Rate / 100
  * - Completed Months = full elapsed months from Dena Date to Today (or Paid Date if status is 'paid')
  * - Total Months = Completed Months + 1 (Current running month is included)
- * - Total Interest = Monthly Interest × Total Months
+ * - Total Interest = Monthly Interest * Total Months
  * - For Standard Mode: Current Total = Principal + Total Interest
  * - For Interest Only Mode: Original Principal remains unchanged.
  *   Current Total Due = Principal + Current Pending Interest Due.
@@ -241,7 +239,7 @@ export function calculateHisaab(
   const p = isNaN(principal) || principal < 0 ? 0 : principal;
   const r = isNaN(rate) || rate < 0 ? 0 : rate;
 
-  // Monthly Interest = Principal × Rate / 100
+  // Monthly Interest = Principal * Rate / 100
   const monthlyInterest = Number(((p * r) / 100).toFixed(2));
 
   // Determine target date: If paid, freeze interest at paidDate (or denaDate if paid immediately)
@@ -260,7 +258,7 @@ export function calculateHisaab(
     totalMonths = completedMonths + 1;
   }
 
-  // Total Interest accrued = Monthly Interest × Total Months (including current month)
+  // Total Interest accrued = Monthly Interest * Total Months (including current month)
   const interestAmount = Number((monthlyInterest * totalMonths).toFixed(2));
 
   if (paymentMode === 'interest_only') {
@@ -308,14 +306,12 @@ export function calculateHisaab(
  */
 export function formatCurrency(amount: number, showDecimals = true): string {
   if (isNaN(amount) || amount === null || amount === undefined) return '₹0';
-  
   const formatted = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: showDecimals ? 2 : 0,
     maximumFractionDigits: 2,
   }).format(amount);
-
   return formatted;
 }
 
@@ -333,7 +329,7 @@ export function formatDate(dateString: string, lang: Language = 'en'): string {
 
     if (lang === 'hi') {
       const monthsHi = [
-        'जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+        'जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
         'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'
       ];
       return `${day} ${monthsHi[month - 1]} ${year}`;
@@ -439,119 +435,77 @@ export function generateProfessionalWhatsAppMessage(
 
       if (isPaid) {
         return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
-   *🧾 सरल हिसाब | पूर्ण चुकता रसीद*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *डिजिटल हिसाब | खाता चुकता विवरण*
+नमस्ते *${person.name}* जी, आपका केवल-ब्याज खाता पूरी तरह चुकता और बंद कर दिया गया है।
 
-नमस्ते *${person.name}* जी 🙏,
-प्रणाम।
+📌 *खाता विवरण (Interest Only Loan):*
+• *उधार देने की तारीख:* ${formattedDate}
+• *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} *(स्थिर)*
+• *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
+• *कुल समय अवधि:* ${totalMos} महीने
+• *कुल चुकाया गया ब्याज:* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह)
+${formattedPaidDate ? `• *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}• *स्थिति:* ✅ पूर्ण चुकता (SETTLED)
 
-आपके *केवल ब्याज खाता (Interest Only Loan)* का मूलधन एवं ब्याज पूर्णतः चुकता हो चुका है।
-
-📋 *खाता रसीद विवरण:*
-▫️ *शुरुआती तारीख:* ${formattedDate}
-▫️ *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} *(अपरिवर्तित)*
-▫️ *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
-▫️ *कुल अवधि:* ${totalMos} महीने
-▫️ *कुल जमा किया गया ब्याज:* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह)
-${formattedPaidDate ? `▫️ *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}
-─────────────────────────
-✅ *खाता स्थिति: मूलधन व ब्याज पूर्ण चुकता (SETTLED)*
-─────────────────────────
-${person.note ? `📝 *टिप्पणी:* ${person.note}\n` : ''}${customNote ? `💬 *संदेश:* ${customNote}\n` : ''}
-समय पर भुगतान करने के लिए हार्दिक धन्यवाद! 🙏
-
-*— सरल हिसाब (Simple Hisaab)*`
+${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}धन्यवाद!
+_डिजिटल हिसाब (Simple Hisaab)_`
         );
       }
 
       return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
-   *🧾 सरल हिसाब | मासिक ब्याज विवरण*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *डिजिटल हिसाब | मासिक ब्याज विवरण*
+नमस्ते *${person.name}* जी, यह आपके केवल-ब्याज खाते का विवरण है।
 
-नमस्ते *${person.name}* जी 🙏,
-सादर प्रणाम।
+📌 *खाता विवरण (Interest-Only Statement):*
+• *उधार देने की तारीख:* ${formattedDate}
+• *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} *(स्थिर)*
+• *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
+• *समय अवधि:* ${totalMos} महीने (चालू माह सहित)
+• *कुल जमा ब्याज (Paid):* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह)
+• *बाकी देय ब्याज (Pending Due):* ${formatCurrency(dueInterest)} (${pendingMonthsCount} माह)
 
-यह आपके *केवल ब्याज खाते (Interest-Only Loan)* का अद्यतन विवरण है:
+💰 *वर्तमान देय ब्याज राशि: ${formatCurrency(dueInterest)}*
+*(मूलधन: ${formatCurrency(person.principalAmount)} + देय ब्याज: ${formatCurrency(dueInterest)} = कुल: ${formatCurrency(person.totalAmount)})*
+• *ब्याज स्थिति:* ${dueInterest > 0 ? '⚠️ बाकी देय (PENDING)' : '✅ अद्यतन (UP TO DATE)'}
 
-📋 *खाता विवरण (Interest-Only Statement):*
-▫️ *ऋण आरंभ तारीख:* ${formattedDate}
-▫️ *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} *(अपरिवर्तित)*
-▫️ *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
-▫️ *कुल लागू महीने:* ${totalMos} माह (चालू महीना सहित)
-▫️ *कुल जमा ब्याज (Paid):* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह चुकता)
-▫️ *वर्तमान बाकी ब्याज (Pending Due):* ${formatCurrency(dueInterest)} (${pendingMonthsCount} माह बकाया)
-
-─────────────────────────
-💰 *वर्तमान कुल देय ब्याज: ${formatCurrency(dueInterest)}*
-*(मूलधन: ${formatCurrency(person.principalAmount)} + बाकी ब्याज: ${formatCurrency(dueInterest)} = कुल: ${formatCurrency(person.totalAmount)})*
-─────────────────────────
-▫️ *ब्याज स्थिति:* ${dueInterest > 0 ? '⏳ मासिक ब्याज बकाया (PENDING)' : '✅ चालू माह तक ब्याज चुकता'}
-${person.note ? `📝 *नोट:* ${person.note}\n` : ''}${customNote ? `💬 *संदेश:* ${customNote}\n` : ''}
-कृपया चालू महीने के ब्याज का मिलान कर भुगतान करने का कष्ट करें।
-धन्यवाद! 🙏
-
-*— सरल हिसाब (Simple Hisaab)*`
+${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}कृपया समय पर ब्याज जमा करवाएं। धन्यवाद!
+_डिजिटल हिसाब (Simple Hisaab)_`
       );
     }
 
     if (isPaid) {
       return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
-   *🧾 सरल हिसाब | भुगतान रसीद*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *डिजिटल हिसाब | भुगतान रसीद*
+नमस्ते *${person.name}* जी, आपका हिसाब पूर्ण रूप से चुकता हो चुका है।
 
-नमस्ते *${person.name}* जी 🙏,
-प्रणाम।
+📌 *भुगतान विवरण (Payment Receipt):*
+• *उधार तारीख (Date):* ${formattedDate}
+• *मूलधन (Principal):* ${formatCurrency(person.principalAmount)}
+• *मासिक ब्याज दर (Rate):* ${person.rate}% प्रति माह
+• *कुल महीने:* ${totalMos} महीने
+• *कुल ब्याज:* ${formatCurrency(person.interestAmount)}
+• *कुल चुकता राशि:* ${formatCurrency(person.totalAmount)}
+${formattedPaidDate ? `• *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}• *स्थिति:* ✅ पूर्ण चुकता (PAID & SETTLED)
 
-आपके खाते का पूरा भुगतान सफलतापूर्वक प्राप्त हो चुका है।
-
-📋 *भुगतान विवरण (Payment Receipt):*
-▫️ *देना तारीख (Date):* ${formattedDate}
-▫️ *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)}
-▫️ *मासिक ब्याज दर (Rate):* ${person.rate}% प्रति माह
-▫️ *कुल अवधि:* ${totalMos} महीने
-▫️ *कुल साधारण ब्याज:* ${formatCurrency(person.interestAmount)}
-▫️ *कुल चुकता राशि:* ${formatCurrency(person.totalAmount)}
-${formattedPaidDate ? `▫️ *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}
-─────────────────────────
-✅ *खाता स्थिति: पूर्ण चुकता (PAID & SETTLED)*
-─────────────────────────
-${person.note ? `📝 *टिप्पणी:* ${person.note}\n` : ''}${customNote ? `💬 *संदेश:* ${customNote}\n` : ''}
-समय पर भुगतान करने के लिए आपका हार्दिक धन्यवाद! 🙏
-
-*— सरल हिसाब (Simple Hisaab)*`
+${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}समय पर भुगतान के लिए आपका बहुत-बहुत धन्यवाद!
+_डिजिटल हिसाब (Simple Hisaab)_`
       );
     }
 
     return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
-   *🧾 सरल हिसाब | खाता विवरण*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *डिजिटल हिसाब | बकाया विवरण व भुगतान सूचना*
+नमस्ते *${person.name}* जी, आपके साधारण ब्याज ऋण का विवरण नीचे दिया गया है:
 
-नमस्ते *${person.name}* जी 🙏,
-सादर प्रणाम।
+📌 *खाता विवरण (Statement Details):*
+• *उधार तारीख (Date):* ${formattedDate}
+• *मूलधन (Principal):* ${formatCurrency(person.principalAmount)}
+• *ब्याज दर (Rate):* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
+• *कुल समय (Duration):* ${totalMos} महीने (चालू माह सहित)
+• *कुल साधारण ब्याज:* ${formatCurrency(person.interestAmount)}
+💰 *कुल देय राशि: ${formatCurrency(person.totalAmount)}*
+• *स्थिति:* ⏳ बाकी देय (PENDING)
 
-यह आपके खाते के साधारण ब्याज और वर्तमान कुल देय हिसाब का अधिकृत विवरण है:
-
-📋 *हिसाब विवरण (Statement Details):*
-▫️ *देना तारीख (Date):* ${formattedDate}
-▫️ *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)}
-▫️ *मासिक ब्याज दर (Rate):* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
-▫️ *लागू अवधि (Duration):* ${totalMos} महीने (चालू महीना सहित)
-▫️ *कुल साधारण ब्याज:* ${formatCurrency(person.interestAmount)}
-
-─────────────────────────
-💰 *वर्तमान कुल देय राशि: ${formatCurrency(person.totalAmount)}*
-─────────────────────────
-▫️ *भुगतान स्थिति:* ⏳ बकाया (PENDING)
-${person.note ? `📝 *नोट/विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *संदेश:* ${customNote}\n` : ''}
-कृपया सुविधानुसार हिसाब का मिलान कर भुगतान करने का कष्ट करें। 
-किसी भी प्रश्न या जानकारी के लिए संपर्क कर सकते हैं।
-
-धन्यवाद! 🙏
-*— सरल हिसाब (Simple Hisaab)*`
+${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}कृपया हिसाब देखकर भुगतान की व्यवस्था करें। धन्यवाद!
+_डिजिटल हिसाब (Simple Hisaab)_`
     );
   }
 
@@ -564,119 +518,77 @@ ${person.note ? `📝 *नोट/विवरण:* ${person.note}\n` : ''}${cust
 
     if (isPaid) {
       return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
-  *🧾 SIMPLE HISAAB | LOAN SETTLED*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *DIGITAL HISAAB | LOAN SETTLED*
+Dear *${person.name}*, Greetings! Your Interest-Only account has been fully settled and closed.
 
-Dear *${person.name}*,
-Greetings!
+📌 *Settlement Summary:*
+• *Given Date:* ${formattedDate}
+• *Principal Amount:* ${formatCurrency(person.principalAmount)} *(Unchanged)*
+• *Monthly Rate:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
+• *Total Duration:* ${totalMos} Months
+• *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
+${formattedPaidDate ? `• *Settlement Date:* ${formattedPaidDate}\n` : ''}• *Status: FULLY PAID & SETTLED*
 
-Your Interest-Only account has been fully settled and closed.
-
-📋 *Settlement Summary:*
-▫️ *Given Date:* ${formattedDate}
-▫️ *Principal Amount:* ${formatCurrency(person.principalAmount)} *(Unchanged)*
-▫️ *Monthly Rate:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
-▫️ *Total Duration:* ${totalMos} Months
-▫️ *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
-${formattedPaidDate ? `▫️ *Settlement Date:* ${formattedPaidDate}\n` : ''}
-─────────────────────────
-✅ *Status: FULLY PAID & SETTLED*
-─────────────────────────
-${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}
-Thank you very much for the prompt settlement! 🙏
-
-*— Simple Hisaab*`
+${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Thank you very much for the prompt settlement!
+_Digital Hisaab_`
       );
     }
 
     return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
- *🧾 SIMPLE HISAAB | INTEREST STATEMENT*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *DIGITAL HISAAB | INTEREST STATEMENT*
+Dear *${person.name}*, Greetings! Here is the statement for your *Interest-Only Account*:
 
-Dear *${person.name}*,
-Greetings!
+📌 *Account Summary:*
+• *Loan Start Date:* ${formattedDate}
+• *Original Principal:* ${formatCurrency(person.principalAmount)} *(Unchanged)*
+• *Monthly Interest:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
+• *Billing Duration:* ${totalMos} Months (current month included)
+• *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
+• *Current Interest Due:* ${formatCurrency(dueInterest)} (${pendingMonthsCount} months pending)
 
-Here is the statement for your *Interest-Only Account*:
-
-📋 *Account Summary:*
-▫️ *Loan Start Date:* ${formattedDate}
-▫️ *Original Principal:* ${formatCurrency(person.principalAmount)} *(Unchanged)*
-▫️ *Monthly Interest:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
-▫️ *Billing Duration:* ${totalMos} Months (current month included)
-▫️ *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
-▫️ *Current Interest Due:* ${formatCurrency(dueInterest)} (${pendingMonthsCount} months pending)
-
-─────────────────────────
 💰 *Current Interest Due: ${formatCurrency(dueInterest)}*
 *(Principal: ${formatCurrency(person.principalAmount)} + Due Interest: ${formatCurrency(dueInterest)} = Total: ${formatCurrency(person.totalAmount)})*
-─────────────────────────
-▫️ *Interest Status:* ${dueInterest > 0 ? '⏳ PENDING' : '✅ UP TO DATE'}
-${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}
-Kindly arrange the monthly interest payment at your earliest convenience.
+• *Interest Status:* ${dueInterest > 0 ? '⚠️ PENDING' : '✅ UP TO DATE'}
 
-Thank you! 🙏
-*— Simple Hisaab*`
+${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Kindly arrange the monthly interest payment at your earliest convenience. Thank you!
+_Digital Hisaab_`
     );
   }
 
   if (isPaid) {
     return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
-  *🧾 SIMPLE HISAAB | PAYMENT RECEIPT*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *DIGITAL HISAAB | PAYMENT RECEIPT*
+Dear *${person.name}*, Greetings! We confirm that the full settlement for your account has been successfully received.
 
-Dear *${person.name}*,
-Greetings!
+📌 *Payment Receipt Summary:*
+• *Given Date:* ${formattedDate}
+• *Principal Amount:* ${formatCurrency(person.principalAmount)}
+• *Monthly Rate:* ${person.rate}% / month
+• *Billing Period:* ${totalMos} Months
+• *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
+• *Total Amount Settled:* ${formatCurrency(person.totalAmount)}
+${formattedPaidDate ? `• *Settlement Date:* ${formattedPaidDate}\n` : ''}• *Account Status: FULLY PAID & SETTLED*
 
-We confirm that the full settlement for your account has been successfully received.
-
-📋 *Payment Receipt Summary:*
-▫️ *Given Date:* ${formattedDate}
-▫️ *Principal Amount:* ${formatCurrency(person.principalAmount)}
-▫️ *Monthly Rate:* ${person.rate}% / month
-▫️ *Billing Period:* ${totalMos} Months
-▫️ *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
-▫️ *Total Amount Settled:* ${formatCurrency(person.totalAmount)}
-${formattedPaidDate ? `▫️ *Settlement Date:* ${formattedPaidDate}\n` : ''}
-─────────────────────────
-✅ *Account Status: FULLY PAID & SETTLED*
-─────────────────────────
-${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}
-Thank you very much for the prompt settlement! 🙏
-
-*— Simple Hisaab*`
+${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Thank you very much for the prompt settlement!
+_Digital Hisaab_`
     );
   }
 
   return (
-`*━━━━━━━━━━━━━━━━━━━━━━━━━*
- *🧾 SIMPLE HISAAB | ACCOUNT STATEMENT*
-*━━━━━━━━━━━━━━━━━━━━━━━━━*
+`📋 *DIGITAL HISAAB | ACCOUNT STATEMENT*
+Dear *${person.name}*, Greetings! Here is the official simple interest statement for your account:
 
-Dear *${person.name}*,
-Greetings!
-
-Here is the official simple interest statement for your account:
-
-📋 *Account Summary:*
-▫️ *Given Date (Dena Date):* ${formattedDate}
-▫️ *Principal Amount:* ${formatCurrency(person.principalAmount)}
-▫️ *Monthly Interest Rate:* ${person.rate}% / month (${formatCurrency(person.monthlyInterest)} / mo)
-▫️ *Applicable Period:* ${totalMos} Months (current month included)
-▫️ *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
-
-─────────────────────────
+📌 *Account Summary:*
+• *Given Date (Dena Date):* ${formattedDate}
+• *Principal Amount:* ${formatCurrency(person.principalAmount)}
+• *Monthly Interest Rate:* ${person.rate}% / month (${formatCurrency(person.monthlyInterest)} / mo)
+• *Applicable Period:* ${totalMos} Months (current month included)
+• *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
 💰 *Total Amount Due: ${formatCurrency(person.totalAmount)}*
-─────────────────────────
-▫️ *Payment Status:* ⏳ PENDING
-${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}
-Kindly review the statement and arrange the payment at your earliest convenience.
-Feel free to get in touch for any queries or clarifications.
+• *Payment Status:* ⏳ PENDING
 
-Thank you! 🙏
-*— Simple Hisaab*`
+${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Kindly review the statement and arrange the payment at your earliest convenience. Feel free to get in touch for any queries or clarifications. Thank you!
+_Digital Hisaab_`
   );
 }
 
@@ -713,7 +625,7 @@ export const i18n = {
     paidPersons: 'Paid Persons',
     pendingPersons: 'Pending Persons',
     recentPersons: 'Recent Entries',
-    pendingPayments: 'Pending Payments (बाकी वसूली)',
+    pendingPayments: 'Pending Payments',
     viewAll: 'View All',
     noPending: 'Great! No pending payments right now.',
     addPersonTitle: 'Add New Hisaab',
@@ -724,13 +636,13 @@ export const i18n = {
     mobilePlaceholder: 'e.g. 9876543210',
     ratePercent: 'Monthly Rate (%)',
     ratePlaceholder: 'e.g. 5',
-    denaDate: 'Dena Date (तारीख)',
-    principalAmount: 'Principal Amount (₹)',
+    denaDate: 'Dena Date',
+    principalAmount: 'Principal Amount',
     principalPlaceholder: 'e.g. 10000',
     paymentModeLabel: 'Payment Mode',
     modeStandard: 'Standard (Lump-Sum)',
     modeStandardDesc: 'Principal + Interest paid together at settlement',
-    modeInterestOnly: 'Interest Only (मासिक ब्याज)',
+    modeInterestOnly: 'Interest Only',
     modeInterestOnlyDesc: 'Principal remains unchanged, borrower pays interest each month',
     payInterestBtn: 'Pay Interest',
     payInterestTitle: 'Record Interest Payment',
@@ -744,21 +656,21 @@ export const i18n = {
     dueDateLabel: 'Due Date',
     interestPaidOn: 'Paid on',
     paymentMethod: 'Payment Mode / Method',
-    cash: 'Cash (नकद)',
+    cash: 'Cash',
     upi: 'PhonePe / GPay / UPI',
-    bank: 'Bank Transfer (बैंक)',
+    bank: 'Bank Transfer',
     other: 'Other',
     confirmInterestPayment: 'Confirm Interest Payment',
     markAsPaid: 'Mark Paid',
     markAsPending: 'Mark Pending',
     settleLoanPrincipal: 'Settle Entire Loan (Principal & Balance)',
-    monthlyInterest: 'Monthly Interest (₹)',
+    monthlyInterest: 'Monthly Interest',
     completedMonths: 'Completed Months',
     calculatedInterest: 'Total Interest',
     calculatedTotal: 'Current Total',
     paymentStatus: 'Payment Status',
-    statusPaid: 'PAID (चुकता)',
-    statusPending: 'PENDING (बाकी)',
+    statusPaid: 'PAID',
+    statusPending: 'PENDING',
     paidDateLabel: 'Settlement Date',
     simpleInterestRule: 'Simple Interest: Increases automatically every completed month for pending accounts.',
     note: 'Note (Optional)',
@@ -840,7 +752,7 @@ export const i18n = {
     signInWithGoogle: 'Continue with Google (Gmail)',
     signInWithPhone: 'Continue with Mobile Number',
     enterMobileNumber: 'Enter Mobile Number',
-    sendOtp: 'Send OTP (सत्यापन कोड)',
+    sendOtp: 'Send OTP',
     enterOtp: 'Enter 6-digit OTP Code',
     verifyOtp: 'Verify & Login',
     resendOtp: 'Resend OTP',
@@ -855,165 +767,164 @@ export const i18n = {
     dataSafety: 'Secure Cloud Storage (Firebase Firestore)',
   },
   hi: {
-    appName: 'डिजिटल हिसाब मैनेजमेंट सिस्टम',
-    appTagline: 'आधुनिक डिजिटल रुपया व मासिक ब्याज हिसाब-किताब प्रबंधन प्रणाली',
+    appName: 'डिजिटल हिसाब',
+    appTagline: 'डिजिटल खाता व मासिक ब्याज प्रबंधन प्रणाली',
     home: 'होम',
-    persons: 'व्यक्ति सूची',
-    add: 'नया हिसाब',
+    persons: 'खातेदार',
+    add: 'हिसाब जोड़ें',
     reports: 'रिपोर्ट्स',
     settings: 'सेटिंग्स',
-    searchPlaceholder: 'नाम या मोबाइल नंबर से खोजें...',
+    searchPlaceholder: 'नाम या मोबाइल नंबर खोजें...',
     quickSearch: 'त्वरित खोज',
-    totalPersons: 'कुल व्यक्ति',
+    totalPersons: 'कुल खातेदार',
     totalPrincipal: 'कुल मूलधन',
-    totalAmount: 'कुल देय रकम',
+    totalAmount: 'कुल देय राशि',
     totalInterest: 'कुल ब्याज',
     totalMonthlyInterest: 'मासिक ब्याज प्रवाह',
-    totalPaidAmount: 'कुल प्राप्त (चुकता)',
-    totalPendingAmount: 'कुल बाकी (लंबित)',
-    paidPersons: 'चुकता व्यक्ति',
-    pendingPersons: 'बाकी व्यक्ति',
-    recentPersons: 'हालिया प्रविष्टियाँ',
-    pendingPayments: 'बाकी वसूली सूची',
+    totalPaidAmount: 'कुल प्राप्त रकम',
+    totalPendingAmount: 'कुल बकाया रकम',
+    paidPersons: 'चुकता खाते',
+    pendingPersons: 'बाकी खाते',
+    recentPersons: 'हालिया हिसाब',
+    pendingPayments: 'बकाया हिसाब',
     viewAll: 'सभी देखें',
-    noPending: 'बहुत बढ़िया! अभी कोई रकम बाकी नहीं है।',
-    addPersonTitle: 'नया हिसाब दर्ज करें',
-    editPersonTitle: 'हिसाब में सुधार करें',
-    personName: 'व्यक्ति का नाम',
-    personNamePlaceholder: 'Enter name',
+    noPending: 'बधाई! अभी कोई बकाया हिसाब नहीं है।',
+    addPersonTitle: 'नया हिसाब जोड़ें',
+    editPersonTitle: 'हिसाब बदलें',
+    personName: 'खातेदार का नाम',
+    personNamePlaceholder: 'नाम दर्ज करें',
     mobileNumber: 'मोबाइल नंबर',
     mobilePlaceholder: 'उदा. 9876543210',
-    ratePercent: 'मासिक ब्याज दर (%)',
+    ratePercent: 'ब्याज दर (%)',
     ratePlaceholder: 'उदा. 5',
-    denaDate: 'देना तारीख',
-    principalAmount: 'मूलधन राशि (₹)',
+    denaDate: 'उधार तारीख',
+    principalAmount: 'मूलधन राशि',
     principalPlaceholder: 'उदा. 10000',
-    paymentModeLabel: 'भुगतान का प्रकार (Payment Mode)',
-    modeStandard: '🔄 साधारण एकमुश्त (Standard)',
-    modeStandardDesc: 'मूलधन + ब्याज अंत में एक साथ चुकता होता है',
-    modeInterestOnly: '📅 केवल ब्याज भुगतान (Interest Only)',
-    modeInterestOnlyDesc: 'मूलधन स्थिर (अपरिवर्तित) रहेगा, कर्जदार हर महीने सिर्फ ब्याज देगा',
-    payInterestBtn: '💰 ब्याज जमा करें (Pay Interest)',
+    paymentModeLabel: 'भुगतान मॉडल (Payment Mode)',
+    modeStandard: 'मानक (एकमुश्त चुकता)',
+    modeStandardDesc: 'मूलधन और ब्याज एक साथ हिसाब चुकता करते समय दिया जाता है',
+    modeInterestOnly: 'केवल मासिक ब्याज',
+    modeInterestOnlyDesc: 'मूलधन स्थिर रहता है, कर्जदार हर महीने केवल ब्याज भरता है',
+    payInterestBtn: 'ब्याज जमा करें',
     payInterestTitle: 'मासिक ब्याज भुगतान दर्ज करें',
-    monthlyInterestRecords: 'मासिक ब्याज रिकॉर्ड (Monthly Schedule)',
-    paymentHistory: 'ब्याज भुगतान इतिहास (Payment History)',
-    totalInterestPaid: 'कुल जमा ब्याज (Total Interest Paid)',
-    currentInterestDue: 'वर्तमान बाकी ब्याज (Current Interest Due)',
-    originalPrincipal: 'मूलधन राशि (अपरिवर्तित)',
-    monthIndexLabel: 'माह',
-    periodLabel: 'ब्याज अवधि',
+    monthlyInterestRecords: 'मासिक ब्याज शेड्यूल',
+    paymentHistory: 'भुगतान इतिहास',
+    totalInterestPaid: 'कुल जमा ब्याज',
+    currentInterestDue: 'वर्तमान बकाया ब्याज',
+    originalPrincipal: 'मूलधन (स्थिर)',
+    monthIndexLabel: 'महीना',
+    periodLabel: 'बिलिंग अवधि',
     dueDateLabel: 'देय तारीख',
-    interestPaidOn: 'जमा तारीख',
-    paymentMethod: 'भुगतान का माध्यम',
+    interestPaidOn: 'भुगतान तारीख',
+    paymentMethod: 'भुगतान माध्यम',
     cash: 'नकद (Cash)',
     upi: 'PhonePe / Google Pay / UPI',
-    bank: 'बैंक ट्रांसफर (Bank Transfer)',
-    other: 'अन्य (Other)',
-    confirmInterestPayment: 'ब्याज भुगतान दर्ज करें',
-    markAsPaid: 'जमा मार्क करें',
+    bank: 'बैंक ट्रांसफर',
+    other: 'अन्य',
+    confirmInterestPayment: 'ब्याज भुगतान की पुष्टि करें',
+    markAsPaid: 'चुकता मार्क करें',
     markAsPending: 'बाकी मार्क करें',
-    settleLoanPrincipal: 'पूरा हिसाब चुकता करें (मूलधन + बकाया ब्याज)',
-    monthlyInterest: 'मासिक ब्याज (₹)',
+    settleLoanPrincipal: 'पूरा कर्ज़ चुकता करें (मूलधन + बकाया)',
+    monthlyInterest: 'मासिक ब्याज',
     completedMonths: 'पूर्ण महीने',
     calculatedInterest: 'कुल ब्याज',
-    calculatedTotal: 'वर्तमान कुल रकम',
+    calculatedTotal: 'कुल हिसाब',
     paymentStatus: 'भुगतान स्थिति',
-    statusPaid: 'चुकता (PAID)',
-    statusPending: 'बाकी (PENDING)',
+    statusPaid: 'पूर्ण चुकता (PAID)',
+    statusPending: 'बाकी देय (PENDING)',
     paidDateLabel: 'चुकता तारीख',
-    simpleInterestRule: 'साधारण ब्याज: बाकी खातों के लिए हर पूर्ण महीने पर ब्याज स्वतः बढ़ता है।',
-    note: 'टिप्पणी / नोट (वैकल्पIC)',
-    notePlaceholder: 'गांव का नाम, सामान का विवरण या कोई खास बात...',
-    saveBtn: 'हिसाब सुरक्षित करें',
-    updateBtn: 'अपडेट करें',
+    simpleInterestRule: 'साधारण ब्याज: बकाया खातों के लिए हर पूर्ण महीने पर अपने आप बढ़ता है।',
+    note: 'टिप्पणी / नोट (वैकल्पिक)',
+    notePlaceholder: 'उधार का कारण, जमानतदार या अन्य विवरण...',
+    saveBtn: 'हिसाब सहेजें',
+    updateBtn: 'हिसाब अपडेट करें',
     cancelBtn: 'रद्द करें',
     deleteBtn: 'हटाएं',
-    editBtn: 'संपादित करें',
+    editBtn: 'बदलें',
     viewBtn: 'विवरण देखें',
     all: 'सभी',
     today: 'आज',
-    thisMonth: 'इस महीने',
-    customRange: 'कस्टम तारीख',
-    startDate: 'प्रारंभ तारीख',
-    endDate: 'अंतिम तारीख',
-    actions: 'क्रियाएँ',
-    exportCsv: 'CSV डाउनलोड करें',
-    exportPdf: 'PDF रिपोर्ट डाउनलोड करें',
-    exportPersonCsv: 'व्यक्ति का CSV',
-    exportPersonPdf: 'व्यक्ति का PDF बिल',
-    backupData: 'बैकअप JSON फाइल डाउनलोड',
-    restoreData: 'बैकअप JSON रीस्टोर करें',
-    clearAllData: 'पूरा डेटा साफ़ करें',
-    loadSampleData: 'डेमो डेटा लोड करें',
-    noDataTitle: 'अभी तक कोई हिसाब नहीं जोड़ा गया',
-    noDataSubtitle: 'रुपये-पैसे का हिसाब-किताब आसानी से रखना शुरू करें।',
-    addFirstPerson: '+ पहला हिसाब जोड़ें',
-    deleteConfirmTitle: 'हटाने की पुष्टि करें',
-    deleteConfirmMsg: 'क्या आप सचमुच इस रिकॉर्ड को हटाना चाहते हैं:',
-    deleteIrreversible: 'यह रिकॉर्ड हमेशा के लिए हट जाएगा।',
-    trash: 'कचरा पेटी (ट्रैश)',
-    trashBin: 'कचरा पेटी व रीसायकल बिन',
-    trashRecoveryTitle: 'कचरा पेटी और डेटा रिकवरी (Trash)',
-    itemsInTrash: 'हिसाब ट्रैश में सुरक्षित हैं',
-    moveToTrash: 'ट्रैश में डालें',
-    moveToTrashBtn: 'ट्रैश में भेजें',
-    moveToTrashConfirmTitle: 'ट्रैश (कचरा पेटी) में भेजें?',
-    moveToTrashConfirmMsg: 'यह हिसाब ट्रैश में सुरक्षित रहेगा। आप इसे कभी भी वापस (Restore) ला सकते हैं।',
-    restore: 'वापस लाएं (Restore)',
-    restoreAll: 'सभी वापस लाएं (Restore All)',
-    restoreAllConfirmTitle: 'सभी हिसाब वापस लाएं?',
-    restoreAllConfirmMsg: 'ट्रैश में मौजूद सभी हिसाब वापस आपकी मुख्य खाता सूची में जोड़ दिए जाएंगे।',
-    emptyTrash: 'ट्रैश खाली करें (Empty Trash)',
-    emptyTrashConfirmTitle: 'क्या आप पूरी कचरा पेटी खाली करना चाहते हैं?',
-    emptyTrashConfirmMsg: 'ट्रैश में मौजूद सभी रिकॉर्ड हमेशा के लिए मिट जाएंगे और उन्हें वापस नहीं लाया जा सकेगा।',
+    thisMonth: 'इस माह',
+    customRange: 'कस्टम अवधि',
+    startDate: 'प्रारंभ तिथि',
+    endDate: 'अंतिम तिथि',
+    actions: 'कार्य',
+    exportCsv: 'CSV डाउनलोड',
+    exportPdf: 'PDF रिपोर्ट',
+    exportPersonCsv: 'खाता CSV',
+    exportPersonPdf: 'खाता PDF वाउचर',
+    backupData: 'बैकअप JSON डाउनलोड',
+    restoreData: 'बैकअप JSON रीस्टोर',
+    clearAllData: 'सभी हिसाब साफ़ करें',
+    loadSampleData: 'सैंपल डेटा लोड करें',
+    noDataTitle: 'अभी कोई हिसाब नहीं जुड़ा है',
+    noDataSubtitle: 'आसानी से अपने लेन-देन का हिसाब रखना शुरू करें।',
+    addFirstPerson: '+ पहला खाता जोड़ें',
+    deleteConfirmTitle: 'हिसाब हटाएं?',
+    deleteConfirmMsg: 'क्या आप वाकई हटाना चाहते हैं:',
+    deleteIrreversible: 'यह क्रिया वापस नहीं ली जा सकती।',
+    trash: 'कचरा पेटी',
+    trashBin: 'कचरा पेटी (Trash)',
+    trashRecoveryTitle: 'कचरा पेटी व डेटा रिकवरी',
+    itemsInTrash: 'आइटम कचरा पेटी में हैं',
+    moveToTrash: 'कचरा पेटी में भेजें',
+    moveToTrashBtn: 'कचरा पेटी में भेजें',
+    moveToTrashConfirmTitle: 'कचरा पेटी में भेजें?',
+    moveToTrashConfirmMsg: 'यह हिसाब कचरा पेटी में चला जाएगा, जहाँ से इसे कभी भी वापस लाया जा सकता है।',
+    restore: 'रीस्टोर करें',
+    restoreAll: 'सभी रीस्टोर करें',
+    restoreAllConfirmTitle: 'सभी हिसाब रीस्टोर करें?',
+    restoreAllConfirmMsg: 'कचरा पेटी के सभी हिसाब पुनः सक्रिय सूची में आ जाएंगे।',
+    emptyTrash: 'कचरा पेटी खाली करें',
+    emptyTrashConfirmTitle: 'पूरी कचरा पेटी खाली करें?',
+    emptyTrashConfirmMsg: 'कचरा पेटी के सभी हिसाब स्थायी रूप से मिट जाएंगे। यह क्रिया वापस नहीं होगी।',
     permanentDelete: 'हमेशा के लिए मिटाएं',
     permanentDeleteBtn: 'हमेशा के लिए मिटाएं',
-    permanentDeleteConfirmTitle: 'स्थायी रूप से हटाएं?',
-    permanentDeleteConfirmMsg: 'यह हिसाब इस डिवाइस से पूरी तरह मिटा दिया जाएगा और इसे दोबारा वापस नहीं लाया जा सकेगा।',
-    trashEmptyTitle: 'कचरा पेटी (ट्रैश) खाली है',
-    trashEmptySubtitle: 'हटाए गए हिसाब यहाँ सुरक्षित रहेंगे और आप उन्हें कभी भी वापस ला सकते हैं।',
-    deletedOn: 'हटाया गया',
-    undo: 'वापस लें (Undo)',
-    toastMovedToTrash: 'को ट्रैश में भेजा गया',
-    toastRestored: 'हिसाब सफलतापूर्वक वापस आ गया!',
-    toastRestoredAll: 'सभी हिसाब ट्रैश से सफलतापूर्वक वापस आ गए!',
-    toastTrashEmptied: 'कचरा पेटी सफलतापूर्वक खाली कर दी गई!',
-    toastPermanentlyDeleted: 'रिकॉर्ड हमेशा के लिए हटा दिया गया।',
-    clearConfirmTitle: 'सारा डेटा साफ़ करें?',
-    clearConfirmMsg: 'यह इस डिवाइस से सभी हिसाब मिटा देगा। कृपया पहले बैकअप ले लें।',
-    toastAdded: 'नया हिसाब सफलतापूर्वक जुड़ गया!',
-    toastUpdated: 'हिसाब सफलतापूर्वक अपडेट हो गया!',
-    toastDeleted: 'रिकॉर्ड हटा दिया गया!',
-    toastStatusChanged: 'भुगतान स्थिति बदल दी गई!',
-    toastInterestPaid: 'ब्याज भुगतान सफलतापूर्वक दर्ज हो गया!',
+    permanentDeleteConfirmTitle: 'स्थायी रूप से मिटाएं?',
+    permanentDeleteConfirmMsg: 'यह हिसाब इस डिवाइस से हमेशा के लिए हट जाएगा।',
+    trashEmptyTitle: 'कचरा पेटी खाली है',
+    trashEmptySubtitle: 'हटाए गए हिसाब यहाँ सुरक्षित रहेंगे, जिन्हें कभी भी रीस्टोर किया जा सकता है।',
+    deletedOn: 'मिटाने की तारीख',
+    undo: 'वापस लें',
+    toastMovedToTrash: 'कचरा पेटी में भेजा गया',
+    toastRestored: 'हिसाब वापस रीस्टोर हो गया!',
+    toastRestoredAll: 'सभी हिसाब कचरा पेटी से रीस्टोर हो गए!',
+    toastTrashEmptied: 'कचरा पेटी खाली कर दी गई!',
+    toastPermanentlyDeleted: 'हिसाब हमेशा के लिए मिटा दिया गया।',
+    clearConfirmTitle: 'सभी हिसाब साफ़ करें?',
+    clearConfirmMsg: 'क्या आप वाकई सभी हिसाब मिटाना चाहते हैं? कृपया पहले बैकअप ले लें।',
+    toastAdded: 'नया हिसाब दर्ज हो गया!',
+    toastUpdated: 'हिसाब अपडेट हो गया!',
+    toastDeleted: 'हिसाब हटा दिया गया!',
+    toastStatusChanged: 'भुगतान स्थिति अपडेट हो गई!',
+    toastInterestPaid: 'मासिक ब्याज भुगतान सफलतापूर्वक दर्ज हुआ!',
     toastBackupSaved: 'बैकअप फ़ाइल डाउनलोड हो गई!',
-    toastBackupRestored: 'डेटा सफलतापूर्वक रीस्टोर हो गया!',
-    toastCleared: 'सारा डेटा साफ़ कर दिया गया!',
+    toastBackupRestored: 'बैकअप सफलतापूर्वक रीस्टोर हो गया!',
+    toastCleared: 'सभी हिसाब साफ़ कर दिए गए।',
     callPerson: 'कॉल करें',
-    whatsappReminder: 'व्हाट्सएप पर तगादा भेजें',
+    whatsappReminder: 'व्हाट्सएप विवरण भेजें',
     ratePresets: ['2%', '3%', '5%', '10%', '12%'],
     amountPresets: [1000, 5000, 10000, 20000, 50000, 100000],
-    login: 'लॉग इन / साइन इन',
-    logout: 'लॉग आउट',
-    account: 'खाता / प्रोफ़ाइल',
-    loginTitle: 'डिजिटल हिसाब मैनेजमेंट सिस्टम में लॉग इन करें',
-    loginSubtitle: 'क्लाउड बैकअप और सुरक्षित खाता प्रबंधन के लिए लॉगिन करें',
+    login: 'लॉगिन / साइन इन',
+    logout: 'लॉगआउट',
+    account: 'अकाउंट',
+    loginTitle: 'डिजिटल हिसाब में साइन इन करें',
+    loginSubtitle: 'क्लाउड बैकअप और सुरक्षित स्टोरेज के साथ डेटा सुरक्षित रखें',
     signInWithGoogle: 'Google (Gmail) से लॉगिन करें',
     signInWithPhone: 'मोबाइल नंबर (OTP) से लॉगिन करें',
-    enterMobileNumber: 'अपना 10-अंकों का मोबाइल नंबर दर्ज करें',
-    sendOtp: 'OTP कोड भेजें (Send OTP)',
-    enterOtp: '6-अंकों का OTP कोड दर्ज करें',
-    verifyOtp: 'OTP सत्यापित करें व लॉगिन करें',
-    resendOtp: 'दोबारा OTP भेजें',
+    enterMobileNumber: 'अपना 10-अंकीय मोबाइल नंबर दर्ज करें',
+    sendOtp: 'OTP भेजें',
+    enterOtp: '6-अंकीय OTP दर्ज करें',
+    verifyOtp: 'OTP सत्यापित करें',
+    resendOtp: 'पुनः OTP भेजें',
     changeNumber: 'नंबर बदलें',
-    guestMode: 'बिना लॉगिन जारी रखें (Guest/Offline)',
+    guestMode: 'अतिथि / ऑफ़लाइन जारी रखें',
     cloudSynced: 'क्लाउड सिंक सक्रिय',
-    guestOffline: 'ऑफलाइन मोड',
-    syncToCloud: 'लोकल डेटा को क्लाउड पर सेव करें',
-    syncSuccess: 'डेटा सफलतापूर्वक क्लाउड पर सिंक हो गया!',
-    loginSuccess: 'सफलतापूर्वक लॉग इन हो गया!',
-    logoutSuccess: 'सफलतापूर्वक लॉग आउट हो गया।',
+    guestOffline: 'ऑफ़लाइन मोड',
+    syncToCloud: 'डेटा क्लाउड में सुरक्षित करें',
+    syncSuccess: 'क्लाउड के साथ सिंक सफल!',
+    loginSuccess: 'लॉगिन सफल रहा!',
+    logoutSuccess: 'लॉगआउट सफल रहा।',
     dataSafety: 'सुरक्षित क्लाउड स्टोरेज (Firebase Firestore)',
   },
 };
-

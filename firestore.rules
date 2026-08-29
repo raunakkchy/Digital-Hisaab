@@ -2,12 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User profile document
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User profile document and user-owned subcollections
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
-      // User's Hisaab / Person subcollection
+      // Persons subcollection
       match /persons/{personId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Payments subcollection
+      match /payments/{paymentId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Interest Records subcollection
+      match /interestRecords/{recordId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }

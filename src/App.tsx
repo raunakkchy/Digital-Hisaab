@@ -1,5 +1,5 @@
 /**
- * Simple Hisaab (सरल हिसाब)
+ * Simple Hisaab (डिजिटल हिसाब)
  * Modern, mobile-first money & interest khata ledger for local/village use.
  * With secure authentication, session persistence, and multi-user data isolation.
  */
@@ -18,7 +18,6 @@ import { TrashModal } from './components/TrashModal';
 import { LoginScreen } from './components/LoginScreen';
 import { AccountModal } from './components/AccountModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
-
 import { PersonHisaab, ActiveTab, Language, ThemeMode, StatusFilterOption, AppUser } from './types';
 import {
   getPersons,
@@ -161,7 +160,6 @@ export default function App() {
             personsCollection,
             async (snapshot) => {
               if (isSyncingRef.current) return;
-
               const cloudPersons: PersonHisaab[] = [];
               snapshot.forEach((doc) => {
                 const data = doc.data() as PersonHisaab;
@@ -271,11 +269,11 @@ export default function App() {
       const msg =
         nextStatus === 'paid'
           ? lang === 'hi'
-            ? `${person.name} का हिसाब चुकता मार्क कर दिया गया!`
+            ? `${person.name} का खाता पूर्ण चुकता (PAID) मार्क किया गया!`
             : `Marked ${person.name} as PAID!`
           : lang === 'hi'
-          ? `${person.name} का हिसाब बाकी मार्क कर दिया गया!`
-          : `Marked ${person.name} as PENDING!`;
+          ? `${person.name} का खाता बाकी देय (PENDING) किया गया!`
+            : `Marked ${person.name} as PENDING!`;
       addToast('success', msg);
     }
   };
@@ -304,7 +302,7 @@ export default function App() {
       }
       const msg =
         lang === 'hi'
-          ? `${updated.name} का ₹${paymentData.amount.toLocaleString('en-IN')} ब्याज भुगतान दर्ज हो गया!`
+          ? `${updated.name} का ₹${paymentData.amount.toLocaleString('en-IN')} ब्याज भुगतान दर्ज किया गया!`
           : `Interest payment of ₹${paymentData.amount.toLocaleString('en-IN')} recorded for ${updated.name}!`;
       addToast('success', msg);
     }
@@ -344,7 +342,6 @@ export default function App() {
     } else if (deleteModal.person) {
       const personId = deleteModal.person.id;
       const personName = deleteModal.person.name;
-
       const moved = moveToTrash(personId, userId);
       if (moved) {
         setPersons(getPersons(userId));
@@ -355,10 +352,10 @@ export default function App() {
         addToast(
           'info',
           lang === 'hi'
-            ? `"${personName}" को कचरा पेटी (Trash) में भेज दिया गया`
+            ? `"${personName}" को कचरा पेटी (Trash) में भेजा गया`
             : `Moved "${personName}" to Trash`,
           {
-            label: lang === 'hi' ? 'वापस लाएं' : 'Undo',
+            label: lang === 'hi' ? 'वापस लें' : 'Undo',
             onClick: () => handleRestorePerson(personId),
           }
         );
@@ -381,7 +378,7 @@ export default function App() {
       addToast(
         'success',
         lang === 'hi'
-          ? `"${restored.name}" का हिसाब सफलतापूर्वक रीस्टोर हो गया!`
+          ? `"${restored.name}" का खाता सफलतापूर्वक रीस्टोर हो गया!`
           : `"${restored.name}" restored successfully!`
       );
     }
@@ -401,7 +398,7 @@ export default function App() {
     addToast(
       'success',
       lang === 'hi'
-        ? `सभी ${restoredList.length} हिसाब रीस्टोर कर दिए गए!`
+        ? `कचरा पेटी से सभी ${restoredList.length} हिसाब रीस्टोर हो गए!`
         : `Restored all ${restoredList.length} records from Trash!`
     );
   };
@@ -449,7 +446,7 @@ export default function App() {
     if (user && user.providerId === 'google.com') {
       await syncAllLocalToCloud(user.uid, samples);
     }
-    addToast('success', lang === 'hi' ? 'डेमो डेटा लोड हो गया!' : 'Sample data loaded!');
+    addToast('success', lang === 'hi' ? 'सैंपल डेटा लोड हो गया!' : 'Sample data loaded!');
   };
 
   // Handle User Login Success
@@ -458,7 +455,6 @@ export default function App() {
     const userRecords = getPersons(loggedInUser.uid);
     setPersons(userRecords);
     setActiveTab('home');
-
     if (isFirstTime) {
       addToast(
         'success',

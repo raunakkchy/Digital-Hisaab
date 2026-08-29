@@ -57,8 +57,31 @@ export async function signInWithGoogle(): Promise<User> {
 export async function logOut(): Promise<void> {
   await signOut(auth);
 }
-
 export const logOutFirebase = logOut;
+
+/**
+ * Recursively remove all `undefined` values from objects or arrays so Firestore setDoc never throws.
+ */
+export function sanitizeForFirestore<T>(data: T): T {
+  if (data === null || data === undefined) {
+    return null as unknown as T;
+  }
+  if (Array.isArray(data)) {
+    return data
+      .filter((item) => item !== undefined)
+      .map((item) => sanitizeForFirestore(item)) as unknown as T;
+  }
+  if (typeof data === 'object' && data.constructor === Object) {
+    const cleanObj: Record<string, any> = {};
+    for (const [key, val] of Object.entries(data)) {
+      if (val !== undefined) {
+        cleanObj[key] = sanitizeForFirestore(val);
+      }
+    }
+    return cleanObj as T;
+  }
+  return data;
+}
 
 /**
  * Sync user profile to Firestore `/users/{userId}`
@@ -67,15 +90,14 @@ export async function syncUserProfile(user: User): Promise<void> {
   if (!user || !user.uid) return;
   try {
     const userRef = doc(db, 'users', user.uid);
-    const profileData: UserProfile = {
+    const profileData = sanitizeForFirestore({
       userId: user.uid,
       displayName: user.displayName || 'Simple Hisaab User',
-      email: user.email || undefined,
-      phoneNumber: user.phoneNumber || undefined,
-      photoURL: user.photoURL || undefined,
+      email: user.email || null,
+      phoneNumber: user.phoneNumber || null,
+      photoURL: user.photoURL || null,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    });
     await setDoc(userRef, { ...profileData, updatedAt: serverTimestamp() }, { merge: true });
   } catch (err) {
     console.warn('Error syncing user profile to Firestore:', err);
@@ -86,18 +108,15 @@ export async function syncUserProfile(user: User): Promise<void> {
  * Firestore Helper: Save or Update Person in Cloud `/users/{userId}/persons/{personId}`
  */
 export async function savePersonToCloud(userId: string, person: PersonHisaab): Promise<void> {
-  if (!userId || !person.id) return;
+  if (!userId || !person || !person.id) return;
   try {
     const personRef = doc(db, 'users', userId, 'persons', person.id);
-    await setDoc(
-      personRef,
-      {
-        ...person,
-        userId,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    const dataToSave = sanitizeForFirestore({
+      ...person,
+      userId,
+      updatedAt: new Date().toISOString(),
+    });
+    await setDoc(personRef, dataToSave, { merge: true });
   } catch (err) {
     console.error('Failed to save person to Firestore:', err);
     throw err;

@@ -1,4 +1,4 @@
-import { Sun, Moon, Languages, Plus, ShieldCheck, User, LogOut, Cloud, Trash2 } from 'lucide-react';
+import { Sun, Moon, Languages, Plus, ShieldCheck, LogOut } from 'lucide-react';
 import { Language, ThemeMode, ActiveTab, AppUser } from '../types';
 import { i18n } from '../utils/formatters';
 
@@ -25,8 +25,6 @@ export function Navbar({
   theme,
   onToggleTheme,
   onOpenAddModal,
-  trashCount = 0,
-  onOpenTrash,
   user,
   onLogout,
   onOpenAccountModal,
@@ -142,24 +140,6 @@ export function Navbar({
               <span className="hidden sm:inline">{lang === 'hi' ? 'लॉग आउट' : 'Logout'}</span>
             </button>
 
-            {/* Trash Button */}
-            {onOpenTrash && (
-              <button
-                id="btn-nav-trash"
-                type="button"
-                onClick={onOpenTrash}
-                className="relative p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 bg-slate-50 dark:bg-slate-800 hover:bg-rose-50/70 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                title={t.trashBin}
-              >
-                <Trash2 className="w-4 h-4" />
-                {trashCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
-                    {trashCount}
-                  </span>
-                )}
-              </button>
-            )}
-
             {/* Language Switch */}
             <button
               id="btn-toggle-lang"
@@ -183,7 +163,7 @@ export function Navbar({
               {theme === 'dark' ? (
                 <Sun className="w-4 h-4 text-amber-400" />
               ) : (
-                <Moon className="w-4 h-4 text-slate-700" />
+                <Moon className="w-4 h-4 text-slate-600" />
               )}
             </button>
           </div>

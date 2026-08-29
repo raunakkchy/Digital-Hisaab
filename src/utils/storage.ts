@@ -124,7 +124,6 @@ export async function registerLocalAccount(
 
   accounts.push(newAccount);
   saveStoredAccounts(accounts);
-
   return { success: true, account: newAccount };
 }
 
@@ -197,9 +196,8 @@ export async function smartLoginOrAutoRegister(
  * Instant Quick Guest Login (1-click, clean empty khata)
  */
 export async function createQuickGuestAccount(customName?: string): Promise<AppUser> {
-  const name = customName?.trim() || 'Guest User (अतिथि)';
+  const name = customName?.trim() || 'Guest User';
   const guestId = 'guest_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
-
   const guestUser: AppUser = {
     uid: guestId,
     displayName: name,
@@ -211,7 +209,6 @@ export async function createQuickGuestAccount(customName?: string): Promise<AppU
 
   // New guest starts with clean empty records
   clearAllData(guestId);
-
   return guestUser;
 }
 
@@ -222,7 +219,7 @@ export async function createDemoAccount(): Promise<AppUser> {
   const demoId = 'demo_account_v1';
   const demoUser: AppUser = {
     uid: demoId,
-    displayName: 'डेमो खाता (Demo Account)',
+    displayName: 'Demo Account',
     email: 'demo@simplehisaab.com',
     phoneNumber: '9876543210',
     photoURL: null,
@@ -231,7 +228,6 @@ export async function createDemoAccount(): Promise<AppUser> {
 
   // Seed rich sample data ONLY for Demo Account
   loadSampleData(demoId);
-
   return demoUser;
 }
 
@@ -249,6 +245,7 @@ export function getAccountSecurityQuestions(username: string): {
 
   const accounts = getStoredAccounts();
   const account = accounts.find((a) => a.username.toLowerCase() === cleanUsername);
+
   if (!account) return { found: false };
 
   const q1 = account.securityQuestion1 || account.securityQuestion;
@@ -392,13 +389,11 @@ export function getActiveSession(): SessionData | null {
     if (sessionRaw) {
       return JSON.parse(sessionRaw);
     }
-
     // Check localStorage (Remember Me)
     const localRaw = localStorage.getItem(STORAGE_KEY_AUTH_SESSION);
     if (localRaw) {
       return JSON.parse(localRaw);
     }
-
     return null;
   } catch (err) {
     console.error('Error reading session:', err);
@@ -569,8 +564,8 @@ export function updatePerson(
   const current = persons[index];
   const merged = { ...current, ...updates };
   const todayStr = new Date().toISOString().split('T')[0];
-
   let paidDate = merged.paidDate;
+
   if (merged.status === 'paid') {
     if (!paidDate) {
       paidDate = todayStr;
@@ -653,7 +648,6 @@ export function recordMonthlyInterestPayment(
     const target = existingRecords[targetRecordIndex];
     targetRecordLabel = target.monthLabel;
     targetMonthIndex = target.monthIndex;
-
     existingRecords[targetRecordIndex] = {
       ...target,
       status: 'paid',
@@ -1123,7 +1117,7 @@ export function loadSampleData(userId?: string | null): PersonHisaab[] {
     >
   > = [
     {
-      name: 'Ramesh Patel (राकेश भाई)',
+      name: 'Ramesh Patel',
       mobile: '9825012345',
       rate: 3,
       denaDate: formatDateOffsetMonths(4, 2),
@@ -1133,7 +1127,7 @@ export function loadSampleData(userId?: string | null): PersonHisaab[] {
       note: 'Tractor loan (Interest Only). Pays ₹1500 monthly interest.',
     },
     {
-      name: 'Suresh Verma (सुरेश वर्मा)',
+      name: 'Suresh Verma',
       mobile: '9414098765',
       rate: 2,
       denaDate: formatDateOffsetMonths(2, 5),
@@ -1154,7 +1148,7 @@ export function loadSampleData(userId?: string | null): PersonHisaab[] {
       note: 'Paid in cash with 2 months interest. Settled.',
     },
     {
-      name: 'Dinesh Yadav (दिनेश यादव)',
+      name: 'Dinesh Yadav',
       mobile: '9123456780',
       rate: 2.5,
       denaDate: formatDateOffsetMonths(3, 4),
@@ -1164,7 +1158,7 @@ export function loadSampleData(userId?: string | null): PersonHisaab[] {
       note: 'Dairy business loan - monthly interest model.',
     },
     {
-      name: 'Pooja Devi (पूजा देवी)',
+      name: 'Pooja Devi',
       mobile: '9798011223',
       rate: 0,
       denaDate: formatDateOffsetMonths(0, 10),

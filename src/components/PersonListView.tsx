@@ -44,7 +44,7 @@ export function PersonListView({
   persons,
   lang,
   initialFilter = 'all',
-  trashCount = 0,
+  trashCount,
   onOpenTrash,
   onOpenAddModal,
   onViewPerson,
@@ -127,24 +127,6 @@ export function PersonListView({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {onOpenTrash && (
-            <button
-              id="btn-list-open-trash"
-              type="button"
-              onClick={onOpenTrash}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-800/80 bg-rose-50/70 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-xs font-bold transition cursor-pointer"
-              title={t.trashBin}
-            >
-              <Trash2 className="w-4 h-4 text-rose-500" />
-              <span>{t.trash}</span>
-              {trashCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white">
-                  {trashCount}
-                </span>
-              )}
-            </button>
-          )}
-
           <button
             id="btn-list-add-person"
             type="button"

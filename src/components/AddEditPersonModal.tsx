@@ -24,7 +24,6 @@ export function AddEditPersonModal({
   onSave,
 }: AddEditPersonModalProps) {
   const t = i18n[lang];
-
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [name, setName] = useState('');
@@ -81,26 +80,22 @@ export function AddEditPersonModal({
     const newErrors: typeof errors = {};
 
     if (!name.trim()) {
-      newErrors.name = lang === 'hi' ? 'कृपया व्यक्ति का नाम दर्ज करें।' : 'Please enter person name.';
+      newErrors.name = lang === 'hi' ? 'कृपया नाम दर्ज करें।' : 'Please enter person name.';
     }
-
     if (!denaDate) {
-      newErrors.denaDate = lang === 'hi' ? 'कृपया तारीख चुनें।' : 'Please select dena date.';
+      newErrors.denaDate = lang === 'hi' ? 'कृपया उधार तारीख चुनें।' : 'Please select dena date.';
     }
-
     if (!principalAmount || numPrincipal <= 0) {
       newErrors.principalAmount =
-        lang === 'hi' ? 'मूलधन 0 से अधिक होना चाहिए।' : 'Principal amount must be greater than 0.';
+        lang === 'hi' ? 'मूलधन राशि 0 से अधिक होनी चाहिए।' : 'Principal amount must be greater than 0.';
     }
-
     if (numRate < 0) {
-      newErrors.rate = lang === 'hi' ? 'ब्याज दर शून्य या अधिक होनी चाहिए।' : 'Rate cannot be negative.';
+      newErrors.rate = lang === 'hi' ? 'ब्याज दर नकारात्मक नहीं हो सकती।' : 'Rate cannot be negative.';
     }
-
     if (mobile.trim() && !isValidIndianMobile(mobile)) {
       newErrors.mobile =
         lang === 'hi'
-          ? 'कृपया वैध 10 अंकों का मोबाइल नंबर दर्ज करें।'
+          ? 'कृपया सही 10-अंकीय मोबाइल नंबर दर्ज करें।'
           : 'Please enter a valid 10-digit mobile number.';
     }
 
@@ -164,7 +159,7 @@ export function AddEditPersonModal({
                 {editItem ? t.editPersonTitle : t.addPersonTitle}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {lang === 'hi' ? 'साधारण हिसाब व मासिक ब्याज फॉर्म' : 'Simple Interest & monthly money ledger'}
+                {lang === 'hi' ? 'साधारण ब्याज व मासिक खाता' : 'Simple Interest & monthly money ledger'}
               </p>
             </div>
           </div>
@@ -187,7 +182,6 @@ export function AddEditPersonModal({
               <span>{t.paymentModeLabel}</span>
               <span className="text-rose-500">*</span>
             </label>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {/* Standard Mode */}
               <button
@@ -251,11 +245,11 @@ export function AddEditPersonModal({
                 <Clock className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                 <div>
                   <p className="font-semibold">
-                    {lang === 'hi' ? 'केवल मासिक ब्याज मोड सक्रिय:' : 'Interest Only Mode Active:'}
+                    {lang === 'hi' ? 'केवल-ब्याज मॉडल सक्रिय:' : 'Interest Only Mode Active:'}
                   </p>
                   <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
                     {lang === 'hi'
-                      ? 'मूलधन राशि अपरिवर्तित रहेगी। हर महीने का ब्याज अलग से दर्ज होगा और आप "Pay Interest" बटन से मासिक ब्याज जमा कर सकेंगे।'
+                      ? 'मूलधन स्थिर रहेगा। हर महीने का ब्याज अलग से बनेगा जिसे "ब्याज जमा करें" से दर्ज किया जा सकता है।'
                       : 'Original Principal remains unchanged. Monthly interest is tracked in separate records and can be paid each month with receipt history.'}
                   </p>
                 </div>
@@ -352,7 +346,6 @@ export function AddEditPersonModal({
                 {lang === 'hi' ? 'त्वरित चयन:' : 'Quick:'}
               </span>
             </div>
-
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-bold">
                 ₹
@@ -411,11 +404,10 @@ export function AddEditPersonModal({
               </label>
               {numPrincipal > 0 && numRate > 0 && (
                 <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">
-                  {formatCurrency(calculatedMonthlyInterest)} / माह
+                  {formatCurrency(calculatedMonthlyInterest)} / महीना
                 </span>
               )}
             </div>
-
             <div className="relative">
               <input
                 id="input-rate-percent"

@@ -1,5 +1,7 @@
 export type PaymentStatus = 'pending' | 'paid';
+
 export type PaymentMode = 'standard' | 'interest_only';
+
 export type InterestRecordStatus = 'pending' | 'paid';
 
 export interface MonthlyInterestRecord {
@@ -63,9 +65,11 @@ export interface PersonHisaab {
 }
 
 export type ActiveTab = 'home' | 'persons' | 'add' | 'reports' | 'settings';
+
 export type StatusFilterOption = 'all' | 'paid' | 'pending';
 export type PaymentModeFilterOption = 'all' | 'standard' | 'interest_only';
 export type DateFilterOption = 'all' | 'today' | 'this_month' | 'custom';
+
 export type Language = 'en' | 'hi';
 export type ThemeMode = 'light' | 'dark';
 
@@ -118,4 +122,3 @@ export interface DashboardStats {
   totalInterestDue?: number;
   interestOnlyPersonsCount?: number;
 }
-

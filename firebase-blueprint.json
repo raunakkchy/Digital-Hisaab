@@ -4,10 +4,8 @@
       "collection": "users",
       "fields": {
         "userId": { "type": "string", "required": true },
-        "displayName": { "type": "string", "required": false },
+        "name": { "type": "string", "required": true },
         "email": { "type": "string", "required": false },
-        "phoneNumber": { "type": "string", "required": false },
-        "photoURL": { "type": "string", "required": false },
         "createdAt": { "type": "string", "required": true },
         "updatedAt": { "type": "string", "required": true }
       }
@@ -27,15 +25,51 @@
         "completedMonths": { "type": "number", "required": true },
         "totalMonths": { "type": "number", "required": true },
         "interestAmount": { "type": "number", "required": true },
+        "totalInterestPaid": { "type": "number", "required": false },
+        "totalPrincipalPaid": { "type": "number", "required": false },
+        "interestDue": { "type": "number", "required": false },
+        "principalDue": { "type": "number", "required": false },
         "totalAmount": { "type": "number", "required": true },
         "status": { "type": "string", "required": true },
         "paidDate": { "type": "string", "required": false },
         "note": { "type": "string", "required": false },
-        "totalInterestPaid": { "type": "number", "required": false },
-        "currentInterestDue": { "type": "number", "required": false },
-        "lastInterestPaidDate": { "type": "string", "required": false },
         "createdAt": { "type": "string", "required": true },
         "updatedAt": { "type": "string", "required": true }
+      }
+    },
+    "PaymentRecord": {
+      "collection": "users/{userId}/payments",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "userId": { "type": "string", "required": true },
+        "receiptNumber": { "type": "string", "required": true },
+        "personId": { "type": "string", "required": true },
+        "personName": { "type": "string", "required": true },
+        "paymentDate": { "type": "string", "required": true },
+        "amount": { "type": "number", "required": true },
+        "paymentType": { "type": "string", "required": true },
+        "paymentMethod": { "type": "string", "required": true },
+        "note": { "type": "string", "required": false },
+        "previousDue": { "type": "number", "required": false },
+        "remainingDue": { "type": "number", "required": false },
+        "createdAt": { "type": "string", "required": true }
+      }
+    },
+    "InterestRecord": {
+      "collection": "users/{userId}/interestRecords",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "userId": { "type": "string", "required": true },
+        "personId": { "type": "string", "required": true },
+        "month": { "type": "string", "required": true },
+        "dueDate": { "type": "string", "required": true },
+        "principalBase": { "type": "number", "required": true },
+        "rate": { "type": "number", "required": true },
+        "interestAmount": { "type": "number", "required": true },
+        "paidAmount": { "type": "number", "required": false },
+        "remainingAmount": { "type": "number", "required": false },
+        "status": { "type": "string", "required": true },
+        "createdAt": { "type": "string", "required": true }
       }
     }
   }

@@ -81,12 +81,11 @@ export function PersonDetailsModal({
   const [payNote, setPayNote] = useState<string>('');
 
   if (!isOpen || !person) return null;
-  const t = i18n[lang];
 
+  const t = i18n[lang];
   const isInterestOnly = person.paymentMode === 'interest_only';
   const interestRecords = person.interestRecords || [];
   const interestPayments = person.interestPayments || [];
-
   const pendingRecords = interestRecords.filter((r) => r.status === 'pending');
   const paidRecords = interestRecords.filter((r) => r.status === 'paid');
 
@@ -140,7 +139,6 @@ export function PersonDetailsModal({
   const handleOpenPayInterest = (recordId?: string) => {
     const targetId = recordId || (pendingRecords.length > 0 ? pendingRecords[0].id : interestRecords[0]?.id || '');
     setSelectedMonthId(targetId);
-
     const targetRecord = interestRecords.find((r) => r.id === targetId);
     setPayAmount(targetRecord ? targetRecord.interestAmount : person.monthlyInterest);
     setPayDate(new Date().toISOString().split('T')[0]);
@@ -153,7 +151,6 @@ export function PersonDetailsModal({
     e.preventDefault();
     if (!selectedMonthId) return;
     const numAmt = Number(payAmount) || person.monthlyInterest;
-
     if (onPayInterest) {
       onPayInterest(person.id, selectedMonthId, {
         paymentDate: payDate,
@@ -162,7 +159,6 @@ export function PersonDetailsModal({
         note: payNote.trim() || undefined,
       });
     }
-
     setPayInterestModalOpen(false);
   };
 
@@ -247,10 +243,9 @@ export function PersonDetailsModal({
                   {person.name}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {lang === 'hi' ? 'देना तारीख' : 'Given Date'}: {formatDate(person.denaDate, lang)} • {person.rate}% {lang === 'hi' ? 'प्रति माह' : '/mo'}
+                  {lang === 'hi' ? 'उधार तारीख' : 'Given Date'}: {formatDate(person.denaDate, lang)} • {person.rate}% {lang === 'hi' ? 'प्रति माह' : '/mo'}
                 </p>
               </div>
-
               {isInterestOnly && (
                 <button
                   type="button"
@@ -272,7 +267,6 @@ export function PersonDetailsModal({
                     {person.mobile}
                   </a>
                 </div>
-
                 <div className="flex items-center gap-2">
                   <button
                     id="btn-call-person"
@@ -283,7 +277,6 @@ export function PersonDetailsModal({
                     <Phone className="w-3.5 h-3.5 text-emerald-600" />
                     <span>{t.callPerson}</span>
                   </button>
-
                   <button
                     id="btn-whatsapp-person"
                     type="button"
@@ -291,13 +284,13 @@ export function PersonDetailsModal({
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200 transition shadow-2xs"
                   >
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>{showWaPreview ? (lang === 'hi' ? 'मैसेज बंद करें' : 'Hide WhatsApp') : (lang === 'hi' ? 'व्हाट्सएप भेजें' : 'WhatsApp')}</span>
+                    <span>{showWaPreview ? (lang === 'hi' ? 'विवरण छुपाएं' : 'Hide WhatsApp') : (lang === 'hi' ? 'व्हाट्सएप भेजें' : 'WhatsApp')}</span>
                   </button>
                 </div>
               </div>
             ) : (
               <p className="text-xs text-slate-400 italic mt-2">
-                {lang === 'hi' ? 'मोबाइल नंबर नहीं दिया गया' : 'No mobile number provided'}
+                {lang === 'hi' ? 'कोई मोबाइल नंबर दर्ज नहीं है' : 'No mobile number provided'}
               </p>
             )}
           </div>
@@ -312,14 +305,14 @@ export function PersonDetailsModal({
                   <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
                     <span>{t.originalPrincipal}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 font-semibold">
-                      {lang === 'hi' ? 'अपरिवर्तित' : 'Fixed'}
+                      {lang === 'hi' ? 'स्थिर' : 'Fixed'}
                     </span>
                   </div>
                   <div className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mt-1">
                     {formatCurrency(person.principalAmount)}
                   </div>
                   <p className="text-[10px] text-slate-400 mt-0.5">
-                    {lang === 'hi' ? 'मूलधन में कोई बदलाव नहीं' : 'Principal remains untouched'}
+                    {lang === 'hi' ? 'मूलधन हमेशा स्थिर रहेगा' : 'Principal remains untouched'}
                   </p>
                 </div>
 
@@ -339,26 +332,26 @@ export function PersonDetailsModal({
                 {/* 3. Total Interest Paid */}
                 <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40">
                   <div className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-                    {lang === 'hi' ? 'कुल ब्याज जमा' : 'Total Interest Paid'}
+                    {lang === 'hi' ? 'कुल जमा ब्याज' : 'Total Interest Paid'}
                   </div>
                   <div className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
                     {formatCurrency(person.totalInterestPaid || 0)}
                   </div>
                   <p className="text-[10px] text-emerald-700 dark:text-emerald-300 mt-0.5">
-                    {paidRecords.length} {lang === 'hi' ? 'महीने चुकता' : 'mos paid'}
+                    {paidRecords.length} {lang === 'hi' ? 'माह चुकता' : 'mos paid'}
                   </p>
                 </div>
 
                 {/* 4. Current Interest Due */}
                 <div className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/70 dark:border-rose-900/40">
                   <div className="text-[11px] font-bold text-rose-800 dark:text-rose-300">
-                    {lang === 'hi' ? 'वर्तमान ब्याज बाकी' : 'Current Interest Due'}
+                    {lang === 'hi' ? 'वर्तमान बाकी ब्याज' : 'Current Interest Due'}
                   </div>
                   <div className="text-lg font-extrabold text-rose-600 dark:text-rose-400 mt-1">
                     {formatCurrency(person.currentInterestDue || 0)}
                   </div>
                   <p className="text-[10px] text-rose-700 dark:text-rose-300 mt-0.5">
-                    {pendingRecords.length} {lang === 'hi' ? 'महीने बाकी' : 'mos due'}
+                    {pendingRecords.length} {lang === 'hi' ? 'माह बाकी' : 'mos due'}
                   </p>
                 </div>
               </div>
@@ -410,14 +403,14 @@ export function PersonDetailsModal({
                     </span>
                   </div>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {paidRecords.length} {lang === 'hi' ? 'चुकता' : 'Paid'} • {pendingRecords.length} {lang === 'hi' ? 'बाकी' : 'Pending'}
+                    {paidRecords.length} {lang === 'hi' ? 'Paid' : 'Paid'} • {pendingRecords.length} {lang === 'hi' ? 'Pending' : 'Pending'}
                   </span>
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-72 overflow-y-auto">
                   {interestRecords.length === 0 ? (
                     <div className="p-4 text-center text-xs text-slate-400">
-                      {lang === 'hi' ? 'कोई मासिक रिकॉर्ड नहीं मिला' : 'No monthly records found'}
+                      {lang === 'hi' ? 'कोई मासिक रिकॉर्ड नहीं' : 'No monthly records found'}
                     </div>
                   ) : (
                     interestRecords.map((rec: MonthlyInterestRecord) => (
@@ -457,28 +450,26 @@ export function PersonDetailsModal({
                             </div>
                           )}
                         </div>
-
                         <div className="flex items-center gap-2">
                           <div className="text-right mr-1">
                             <span className="text-sm font-bold text-slate-900 dark:text-slate-100 block">
                               {formatCurrency(rec.interestAmount)}
                             </span>
                           </div>
-
                           {rec.status === 'pending' ? (
                             <button
                               type="button"
                               onClick={() => handleOpenPayInterest(rec.id)}
                               className="px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition shadow-2xs cursor-pointer"
                             >
-                              {lang === 'hi' ? 'जमा करें' : 'Pay Interest'}
+                              {lang === 'hi' ? 'ब्याज जमा करें' : 'Pay Interest'}
                             </button>
                           ) : (
                             <button
                               type="button"
                               onClick={() => onToggleInterestRecord && onToggleInterestRecord(person.id, rec.id)}
                               className="p-1 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                              title={lang === 'hi' ? 'वापस बाकी मार्क करें' : 'Mark as pending'}
+                              title={lang === 'hi' ? 'बाकी मार्क करें' : 'Mark as pending'}
                             >
                               <RefreshCw className="w-3.5 h-3.5" />
                             </button>
@@ -502,7 +493,6 @@ export function PersonDetailsModal({
                       {interestPayments.length}
                     </span>
                   </div>
-
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto">
                     {interestPayments.map((pay) => (
                       <div key={pay.id} className="p-3 text-xs flex items-center justify-between bg-white dark:bg-slate-900">
@@ -535,19 +525,18 @@ export function PersonDetailsModal({
               <div className="bg-slate-100/80 dark:bg-slate-800/80 px-4 py-2.5 flex flex-wrap items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 gap-1">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                  {lang === 'hi' ? 'देना तारीख' : 'Given Date'}: {formatDate(person.denaDate, lang)}
+                  {lang === 'hi' ? 'उधार तारीख' : 'Given Date'}: {formatDate(person.denaDate, lang)}
                 </span>
                 <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                   <Percent className="w-3.5 h-3.5" />
-                  {person.rate}% {lang === 'hi' ? 'प्रति माह' : 'Monthly Rate'}
+                  {person.rate}% {lang === 'hi' ? 'मासिक दर' : 'Monthly Rate'}
                 </span>
               </div>
-
               <div className="p-4 space-y-3 bg-white dark:bg-slate-900">
                 {/* Principal */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-600 dark:text-slate-400 font-medium">
-                    {lang === 'hi' ? 'मूलधन राशि (Principal)' : 'Principal Amount'}
+                    {lang === 'hi' ? 'मूलधन (Principal)' : 'Principal Amount'}
                   </span>
                   <span className="font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(person.principalAmount)}
@@ -560,7 +549,7 @@ export function PersonDetailsModal({
                     {lang === 'hi' ? `मासिक ब्याज (${person.rate}%)` : `Monthly Interest (${person.rate}%)`}
                   </span>
                   <span className="font-bold text-amber-600 dark:text-amber-400">
-                    {formatCurrency(person.monthlyInterest)} / माह
+                    {formatCurrency(person.monthlyInterest)} / महीना
                   </span>
                 </div>
 
@@ -568,10 +557,10 @@ export function PersonDetailsModal({
                 <div className="flex items-center justify-between text-sm">
                   <div>
                     <span className="text-slate-600 dark:text-slate-400 font-medium block">
-                      {lang === 'hi' ? 'लागू महीने (Total Months)' : 'Charged Months'}
+                      {lang === 'hi' ? 'कुल महीने (Total Months)' : 'Charged Months'}
                     </span>
                     <span className="text-[11px] text-amber-600 dark:text-amber-400">
-                      {lang === 'hi' ? 'चालू महीना शामिल है' : 'Current month included'}
+                      {lang === 'hi' ? 'चालू माह शामिल' : 'Current month included'}
                     </span>
                   </div>
                   <span className="font-bold font-mono px-2 py-1 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs">
@@ -606,15 +595,15 @@ export function PersonDetailsModal({
                 <div className="pt-3 border-t border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <div>
                     <span className="block text-xs uppercase font-bold text-slate-500 dark:text-slate-400">
-                      {lang === 'hi' ? 'वर्तमान कुल देय' : 'Current Total Due'}
+                      {lang === 'hi' ? 'कुल देय राशि' : 'Current Total Due'}
                     </span>
                     <span className="text-[11px] text-slate-400">
                       {person.status === 'pending'
                         ? lang === 'hi'
-                          ? 'साधारण ब्याज स्वतः बढ़ता रहता है'
+                          ? 'हर पूर्ण माह पर साधारण ब्याज बढ़ेगा'
                           : 'Simple interest increases monthly'
                         : lang === 'hi'
-                        ? 'पूर्ण चुकता (ब्याज रुक गया)'
+                        ? 'पूर्ण चुकता हिसाब (ब्याज स्थिर)'
                         : 'Settled in full (interest frozen)'}
                     </span>
                   </div>
@@ -633,10 +622,9 @@ export function PersonDetailsModal({
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-200">
                   <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>
-                    {lang === 'hi' ? 'व्हाट्सएप पेशेवर हिसाब विवरण' : 'Professional WhatsApp Statement'}
+                    {lang === 'hi' ? 'व्हाट्सएप पर विवरण भेजें' : 'Professional WhatsApp Statement'}
                   </span>
                 </div>
-
                 {/* Language Toggle for WhatsApp */}
                 <div className="flex items-center bg-white dark:bg-slate-800 rounded-lg p-0.5 border border-emerald-200 dark:border-emerald-700 text-[11px] font-bold">
                   <button
@@ -671,7 +659,7 @@ export function PersonDetailsModal({
                     <Sparkles className="w-3 h-3 text-amber-500" />
                     <span>
                       {lang === 'hi'
-                        ? 'अतिरिक्त संदेश / नोट जोड़ें (वैकल्पिक):'
+                        ? 'संदेश में व्यक्तिगत नोट जोड़ें (वैकल्पिक):'
                         : 'Add Custom Note / Remark (Optional):'}
                     </span>
                   </label>
@@ -681,7 +669,7 @@ export function PersonDetailsModal({
                     onChange={(e) => setCustomMsgNote(e.target.value)}
                     placeholder={
                       lang === 'hi'
-                        ? 'उदा. कृपया रविवार तक ब्याज जमा करने की कृपा करें...'
+                        ? 'उदा. कृपया रविवार तक ब्याज जमा करवाएं...'
                         : 'e.g. Kindly arrange payment by this weekend...'
                     }
                     className="w-full px-3 py-1.5 text-xs rounded-lg border border-emerald-200 dark:border-emerald-800/80 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -691,7 +679,7 @@ export function PersonDetailsModal({
                 {/* Formatted Message Preview Bubble */}
                 <div className="relative group">
                   <div className="text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center justify-between">
-                    <span>{lang === 'hi' ? 'मैसेज फॉर्मेट पूर्वावलोकन (Preview):' : 'Message Preview:'}</span>
+                    <span>{lang === 'hi' ? 'संदेश का प्रारूप (Preview):' : 'Message Preview:'}</span>
                     <button
                       type="button"
                       onClick={handleCopyWhatsAppMessage}
@@ -710,7 +698,6 @@ export function PersonDetailsModal({
                       )}
                     </button>
                   </div>
-
                   <pre className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-emerald-200/70 dark:border-emerald-900/60 font-sans text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto select-all shadow-inner">
                     {waFormattedMessage}
                   </pre>
@@ -727,7 +714,6 @@ export function PersonDetailsModal({
                     <Send className="w-3.5 h-3.5" />
                     <span>{lang === 'hi' ? 'व्हाट्सएप पर भेजें (Send on WhatsApp)' : 'Send via WhatsApp'}</span>
                   </button>
-
                   <button
                     id="btn-copy-whatsapp-text"
                     type="button"
@@ -737,12 +723,12 @@ export function PersonDetailsModal({
                     {copied ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-600 font-bold">{lang === 'hi' ? 'कॉपी हो गया' : 'Copied'}</span>
+                        <span className="text-emerald-600 font-bold">{lang === 'hi' ? 'कॉपी हुआ' : 'Copied'}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>{lang === 'hi' ? 'टेक्स्ट कॉपी करें' : 'Copy Text'}</span>
+                        <span>{lang === 'hi' ? 'टेक्स्ट कॉपी' : 'Copy Text'}</span>
                       </>
                     )}
                   </button>
@@ -775,12 +761,12 @@ export function PersonDetailsModal({
             {person.status === 'pending' ? (
               <>
                 <CheckCircle2 className="w-5 h-5" />
-                <span>{lang === 'hi' ? 'पूर्ण खाता चुकता मार्क करें (Settle Account)' : 'Mark Account as Settled'}</span>
+                <span>{lang === 'hi' ? 'खाता पूर्ण चुकता मार्क करें (Settle Account)' : 'Mark Account as Settled'}</span>
               </>
             ) : (
               <>
                 <Clock className="w-5 h-5" />
-                <span>{lang === 'hi' ? 'खाता वापस चालू/बाकी मार्क करें' : 'Mark Account as Active/Pending'}</span>
+                <span>{lang === 'hi' ? 'खाता बाकी देय मार्क करें' : 'Mark Account as Active/Pending'}</span>
               </>
             )}
           </button>
@@ -796,7 +782,6 @@ export function PersonDetailsModal({
               <FileDown className="w-4 h-4 text-rose-500" />
               <span>{t.exportPersonPdf}</span>
             </button>
-
             <button
               id="btn-export-person-csv"
               type="button"
@@ -820,7 +805,6 @@ export function PersonDetailsModal({
             <Trash2 className="w-4 h-4" />
             <span>{t.deleteBtn}</span>
           </button>
-
           <button
             id="btn-edit-person"
             type="button"
@@ -928,13 +912,13 @@ export function PersonDetailsModal({
               {/* Payment Method */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                  {lang === 'hi' ? 'भुगतान का माध्यम (Payment Method):' : 'Payment Mode:'}
+                  {lang === 'hi' ? 'भुगतान माध्यम (Payment Method):' : 'Payment Mode:'}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { id: 'cash', label: lang === 'hi' ? 'नकद (Cash)' : 'Cash' },
                     { id: 'upi', label: 'UPI / Online' },
-                    { id: 'bank', label: lang === 'hi' ? 'बैंक ट्रांसफर' : 'Bank' },
+                    { id: 'bank', label: lang === 'hi' ? 'बैंक' : 'Bank' },
                   ].map((m) => (
                     <button
                       key={m.id}
@@ -955,13 +939,13 @@ export function PersonDetailsModal({
               {/* Remark Note */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
-                  {lang === 'hi' ? 'टिप्पणी / रसीद विवरण (Note):' : 'Note / Remarks:'}
+                  {lang === 'hi' ? 'टिप्पणी (Note):' : 'Note / Remarks:'}
                 </label>
                 <input
                   type="text"
                   value={payNote}
                   onChange={(e) => setPayNote(e.target.value)}
-                  placeholder={lang === 'hi' ? 'उदा. हाथ में नकद दिया / UPI से भेजा' : 'e.g. Received in cash'}
+                  placeholder={lang === 'hi' ? 'उदा. नकद प्राप्त / UPI संदर्भ' : 'e.g. Received in cash'}
                   className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
@@ -972,7 +956,7 @@ export function PersonDetailsModal({
                   {lang === 'hi' ? 'महत्वपूर्ण:' : 'Important:'}
                 </span>{' '}
                 {lang === 'hi'
-                  ? 'मूलधन राशि ₹' + person.principalAmount.toLocaleString('en-IN') + ' अपरिवर्तित रहेगी। जमा किया गया ब्याज मूलधन में नहीं जुड़ेगा।'
+                  ? 'मूलधन राशि ₹' + person.principalAmount.toLocaleString('en-IN') + ' स्थिर रहेगी। जमा किया गया ब्याज मूलधन में नहीं जुड़ेगा।'
                   : 'Original principal remains unchanged. Paid interest will not be added to principal.'}
               </div>
 
@@ -988,7 +972,7 @@ export function PersonDetailsModal({
                   type="submit"
                   className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/20 cursor-pointer"
                 >
-                  {lang === 'hi' ? 'जमा दर्ज करें' : 'Save Payment'}
+                  {lang === 'hi' ? 'भुगतान सहेजें' : 'Save Payment'}
                 </button>
               </div>
             </form>
@@ -998,4 +982,3 @@ export function PersonDetailsModal({
     </div>
   );
 }
-

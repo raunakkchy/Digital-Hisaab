@@ -272,10 +272,10 @@ export function TrashModal({
                       type="button"
                       onClick={() => onRestore(person)}
                       className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 shadow-sm shadow-emerald-600/20 transition cursor-pointer"
-                      title={t.restore}
+                      title={lang === 'hi' ? 'रीस्टोर करें' : 'Restore'}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>{t.restore}</span>
+                      <span>{lang === 'hi' ? 'रीस्टोर' : 'Restore'}</span>
                     </button>
 
                     <button
@@ -283,10 +283,10 @@ export function TrashModal({
                       type="button"
                       onClick={() => setPersonToDeleteForever(person)}
                       className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100/80 dark:hover:bg-rose-950/60 border border-rose-200 dark:border-rose-800 transition cursor-pointer"
-                      title={t.permanentDelete}
+                      title={lang === 'hi' ? 'हमेशा के लिए मिटाएं' : 'Permanently Delete'}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline ml-1">{t.permanentDelete}</span>
+                      <span className="hidden sm:inline ml-1">{lang === 'hi' ? 'मिटाएं' : 'Delete'}</span>
                     </button>
                   </div>
                 </div>
@@ -299,8 +299,8 @@ export function TrashModal({
         <div className="p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between">
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {trashList.length > 0
-              ? `${trashList.length} ${t.itemsInTrash}`
-              : t.trashEmptyTitle}
+              ? `${trashList.length} ${lang === 'hi' ? 'आइटम कचरा पेटी में हैं' : 'items in trash'}`
+              : (lang === 'hi' ? 'कचरा पेटी खाली है' : 'Trash is empty')}
           </span>
           <button
             id="btn-close-trash-footer"
@@ -308,7 +308,7 @@ export function TrashModal({
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition cursor-pointer"
           >
-            {t.cancelBtn}
+            {lang === 'hi' ? 'बंद करें' : 'Close'}
           </button>
         </div>
       </div>
@@ -326,15 +326,17 @@ export function TrashModal({
               </div>
               <div>
                 <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  {t.emptyTrashConfirmTitle}
+                  {lang === 'hi' ? 'पूरी कचरा पेटी खाली करें?' : 'Empty Entire Trash?'}
                 </h4>
                 <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                  {t.deleteIrreversible}
+                  {lang === 'hi' ? 'यह क्रिया वापस नहीं ली जा सकती' : 'This action is irreversible'}
                 </p>
               </div>
             </div>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-              {t.emptyTrashConfirmMsg}
+              {lang === 'hi'
+                ? 'क्या आप सचमुच कचरा पेटी में मौजूद सभी हिसाब स्थायी रूप से मिटाना चाहते हैं?'
+                : 'Are you sure you want to permanently delete all records currently in Trash?'}
             </p>
             <div className="flex justify-end gap-2.5 pt-2">
               <button
@@ -352,7 +354,7 @@ export function TrashModal({
                 }}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition shadow-sm"
               >
-                {t.emptyTrash}
+                {lang === 'hi' ? 'कचरा खाली करें' : 'Empty Trash'}
               </button>
             </div>
           </div>
@@ -372,15 +374,17 @@ export function TrashModal({
               </div>
               <div>
                 <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  {t.permanentDeleteConfirmTitle}
+                  {lang === 'hi' ? 'स्थायी रूप से मिटाएं' : 'Permanently Delete Record'}
                 </h4>
                 <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                  {t.deleteIrreversible}
+                  {lang === 'hi' ? 'यह क्रिया वापस नहीं ली जा सकती' : 'This action is irreversible'}
                 </p>
               </div>
             </div>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-              {t.permanentDeleteConfirmMsg}
+              {lang === 'hi'
+                ? 'क्या आप सचमुच इस हिसाब को हमेशा के लिए मिटाना चाहते हैं? यह वापस नहीं लाया जा सकेगा।'
+                : 'Are you sure you want to permanently remove this hisaab? This cannot be undone.'}
             </p>
             <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100">
               {personToDeleteForever.name} • {formatCurrency(personToDeleteForever.principalAmount)}
@@ -401,7 +405,7 @@ export function TrashModal({
                 }}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition shadow-sm"
               >
-                {t.permanentDelete}
+                {lang === 'hi' ? 'हमेशा के लिए मिटाएं' : 'Permanently Delete'}
               </button>
             </div>
           </div>
