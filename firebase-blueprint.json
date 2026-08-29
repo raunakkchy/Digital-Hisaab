@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "UserProfile": {
+      "collection": "users",
+      "fields": {
+        "userId": { "type": "string", "required": true },
+        "displayName": { "type": "string", "required": false },
+        "email": { "type": "string", "required": false },
+        "phoneNumber": { "type": "string", "required": false },
+        "photoURL": { "type": "string", "required": false },
+        "createdAt": { "type": "string", "required": true },
+        "updatedAt": { "type": "string", "required": true }
+      }
+    },
+    "PersonHisaab": {
+      "collection": "users/{userId}/persons",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "userId": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true },
+        "mobile": { "type": "string", "required": false },
+        "principalAmount": { "type": "number", "required": true },
+        "rate": { "type": "number", "required": true },
+        "denaDate": { "type": "string", "required": true },
+        "paymentMode": { "type": "string", "required": false },
+        "monthlyInterest": { "type": "number", "required": true },
+        "completedMonths": { "type": "number", "required": true },
+        "totalMonths": { "type": "number", "required": true },
+        "interestAmount": { "type": "number", "required": true },
+        "totalAmount": { "type": "number", "required": true },
+        "status": { "type": "string", "required": true },
+        "paidDate": { "type": "string", "required": false },
+        "note": { "type": "string", "required": false },
+        "totalInterestPaid": { "type": "number", "required": false },
+        "currentInterestDue": { "type": "number", "required": false },
+        "lastInterestPaidDate": { "type": "string", "required": false },
+        "createdAt": { "type": "string", "required": true },
+        "updatedAt": { "type": "string", "required": true }
+      }
+    }
+  }
+}

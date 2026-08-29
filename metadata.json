@@ -1,0 +1,6 @@
+{
+  "name": "Digital Hisaab Management System",
+  "description": "Digital Hisaab Management System for managing money lending, monthly interest calculation, borrower ledgers, and payment tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
