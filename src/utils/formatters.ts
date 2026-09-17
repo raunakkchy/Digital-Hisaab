@@ -425,6 +425,7 @@ export function generateProfessionalWhatsAppMessage(
   const formattedDate = formatDate(person.denaDate, lang);
   const formattedPaidDate = person.paidDate ? formatDate(person.paidDate, lang) : '';
   const isInterestOnly = person.paymentMode === 'interest_only';
+  const signature = '*— Sahil Chaudhary S/O Satyendra Chaudhary*';
 
   if (lang === 'hi') {
     if (isInterestOnly) {
@@ -435,77 +436,117 @@ export function generateProfessionalWhatsAppMessage(
 
       if (isPaid) {
         return (
-`📋 *डिजिटल हिसाब | खाता चुकता विवरण*
-नमस्ते *${person.name}* जी, आपका केवल-ब्याज खाता पूरी तरह चुकता और बंद कर दिया गया है।
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+ *🧾 सरल हिसाब | केवल-ब्याज चुकता विवरण*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *खाता विवरण (Interest Only Loan):*
-• *उधार देने की तारीख:* ${formattedDate}
-• *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} *(स्थिर)*
-• *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
-• *कुल समय अवधि:* ${totalMos} महीने
-• *कुल चुकाया गया ब्याज:* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह)
-${formattedPaidDate ? `• *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}• *स्थिति:* ✅ पूर्ण चुकता (SETTLED)
+नमस्ते *${person.name}* जी 🙏,
+सादर प्रणाम।
 
-${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}धन्यवाद!
-_डिजिटल हिसाब (Simple Hisaab)_`
+आपका केवल-ब्याज खाता पूरी तरह चुकता और बंद कर दिया गया है।
+
+📋 *खाता विवरण (Settlement Summary):*
+▫️ *उधार तारीख:* ${formattedDate}
+▫️ *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} (स्थिर)
+▫️ *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
+▫️ *कुल समय अवधि:* ${totalMos} महीने
+▫️ *कुल चुकाया गया ब्याज:* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह)
+${formattedPaidDate ? `▫️ *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}▫️ *स्थिति:* ✅ पूर्ण चुकता (SETTLED)
+
+${person.note ? `📝 *नोट/विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}समय पर भुगतान के लिए आपका बहुत-बहुत धन्यवाद!
+
+धन्यवाद! 🙏
+${signature}`
         );
       }
 
       return (
-`📋 *डिजिटल हिसाब | मासिक ब्याज विवरण*
-नमस्ते *${person.name}* जी, यह आपके केवल-ब्याज खाते का विवरण है।
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+ *🧾 सरल हिसाब | मासिक ब्याज विवरण*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *खाता विवरण (Interest-Only Statement):*
-• *उधार देने की तारीख:* ${formattedDate}
-• *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} *(स्थिर)*
-• *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
-• *समय अवधि:* ${totalMos} महीने (चालू माह सहित)
-• *कुल जमा ब्याज (Paid):* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह)
-• *बाकी देय ब्याज (Pending Due):* ${formatCurrency(dueInterest)} (${pendingMonthsCount} माह)
+नमस्ते *${person.name}* जी 🙏,
+सादर प्रणाम।
 
+यह आपके केवल-ब्याज (Interest-Only) खाते का विवरण है:
+
+📋 *खाता विवरण (Interest-Only Statement):*
+▫️ *उधार तारीख:* ${formattedDate}
+▫️ *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)} (स्थिर)
+▫️ *मासिक ब्याज दर:* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
+▫️ *समय अवधि:* ${totalMos} महीने (चालू माह सहित)
+▫️ *कुल जमा ब्याज (Paid):* ${formatCurrency(paidInterest)} (${paidMonthsCount} माह)
+▫️ *बाकी देय ब्याज (Pending Due):* ${formatCurrency(dueInterest)} (${pendingMonthsCount} माह)
+
+─────────────────────────
 💰 *वर्तमान देय ब्याज राशि: ${formatCurrency(dueInterest)}*
 *(मूलधन: ${formatCurrency(person.principalAmount)} + देय ब्याज: ${formatCurrency(dueInterest)} = कुल: ${formatCurrency(person.totalAmount)})*
-• *ब्याज स्थिति:* ${dueInterest > 0 ? '⚠️ बाकी देय (PENDING)' : '✅ अद्यतन (UP TO DATE)'}
+─────────────────────────
+▫️ *ब्याज स्थिति:* ${dueInterest > 0 ? '⏳ बाकी देय (PENDING)' : '✅ अद्यतन (UP TO DATE)'}
 
-${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}कृपया समय पर ब्याज जमा करवाएं। धन्यवाद!
-_डिजिटल हिसाब (Simple Hisaab)_`
+${person.note ? `📝 *नोट/विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}कृपया सुविधानुसार ब्याज का भुगतान करने का कष्ट करें।
+
+धन्यवाद! 🙏
+${signature}`
       );
     }
 
     if (isPaid) {
       return (
-`📋 *डिजिटल हिसाब | भुगतान रसीद*
-नमस्ते *${person.name}* जी, आपका हिसाब पूर्ण रूप से चुकता हो चुका है।
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+   *🧾 सरल हिसाब | भुगतान रसीद*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *भुगतान विवरण (Payment Receipt):*
-• *उधार तारीख (Date):* ${formattedDate}
-• *मूलधन (Principal):* ${formatCurrency(person.principalAmount)}
-• *मासिक ब्याज दर (Rate):* ${person.rate}% प्रति माह
-• *कुल महीने:* ${totalMos} महीने
-• *कुल ब्याज:* ${formatCurrency(person.interestAmount)}
-• *कुल चुकता राशि:* ${formatCurrency(person.totalAmount)}
-${formattedPaidDate ? `• *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}• *स्थिति:* ✅ पूर्ण चुकता (PAID & SETTLED)
+नमस्ते *${person.name}* जी 🙏,
+सादर प्रणाम।
 
-${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}समय पर भुगतान के लिए आपका बहुत-बहुत धन्यवाद!
-_डिजिटल हिसाब (Simple Hisaab)_`
+यह आपके खाते के पूर्ण चुकता हिसाब की अधिकृत रसीद है:
+
+📋 *भुगतान विवरण (Payment Receipt):*
+▫️ *उधार तारीख (Date):* ${formattedDate}
+▫️ *मूलधन (Principal):* ${formatCurrency(person.principalAmount)}
+▫️ *मासिक ब्याज दर (Rate):* ${person.rate}% प्रति माह
+▫️ *कुल महीने:* ${totalMos} महीने
+▫️ *कुल साधारण ब्याज:* ${formatCurrency(person.interestAmount)}
+─────────────────────────
+💰 *कुल चुकता राशि: ${formatCurrency(person.totalAmount)}*
+─────────────────────────
+${formattedPaidDate ? `▫️ *चुकता तारीख (Settled On):* ${formattedPaidDate}\n` : ''}▫️ *स्थिति:* ✅ पूर्ण चुकता (PAID & SETTLED)
+
+${person.note ? `📝 *नोट/विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}समय पर भुगतान के लिए आपका बहुत-बहुत धन्यवाद!
+
+धन्यवाद! 🙏
+${signature}`
       );
     }
 
     return (
-`📋 *डिजिटल हिसाब | बकाया विवरण व भुगतान सूचना*
-नमस्ते *${person.name}* जी, आपके साधारण ब्याज ऋण का विवरण नीचे दिया गया है:
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+   *🧾 सरल हिसाब | खाता विवरण*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *खाता विवरण (Statement Details):*
-• *उधार तारीख (Date):* ${formattedDate}
-• *मूलधन (Principal):* ${formatCurrency(person.principalAmount)}
-• *ब्याज दर (Rate):* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
-• *कुल समय (Duration):* ${totalMos} महीने (चालू माह सहित)
-• *कुल साधारण ब्याज:* ${formatCurrency(person.interestAmount)}
-💰 *कुल देय राशि: ${formatCurrency(person.totalAmount)}*
-• *स्थिति:* ⏳ बाकी देय (PENDING)
+नमस्ते *${person.name}* जी 🙏,
+सादर प्रणाम।
 
-${person.note ? `📝 *विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}कृपया हिसाब देखकर भुगतान की व्यवस्था करें। धन्यवाद!
-_डिजिटल हिसाब (Simple Hisaab)_`
+यह आपके खाते के साधारण ब्याज और वर्तमान कुल देय हिसाब का अधिकृत विवरण है:
+
+📋 *हिसाब विवरण (Statement Details):*
+▫️ *देना तारीख (Date):* ${formattedDate}
+▫️ *मूलधन राशि (Principal):* ${formatCurrency(person.principalAmount)}
+▫️ *मासिक ब्याज दर (Rate):* ${person.rate}% प्रति माह (${formatCurrency(person.monthlyInterest)} / माह)
+▫️ *लागू अवधि (Duration):* ${totalMos} महीने (चालू महीना सहित)
+▫️ *कुल साधारण ब्याज:* ${formatCurrency(person.interestAmount)}
+
+─────────────────────────
+💰 *वर्तमान कुल देय राशि: ${formatCurrency(person.totalAmount)}*
+─────────────────────────
+▫️ *भुगतान स्थिति:* ⏳ बकाया (PENDING)
+${person.note ? `📝 *नोट/विवरण:* ${person.note}\n` : ''}${customNote ? `💬 *नोट:* ${customNote}\n` : ''}
+कृपया सुविधानुसार हिसाब का मिलान कर भुगतान करने का कष्ट करें। 
+किसी भी प्रश्न या जानकारी के लिए संपर्क कर सकते हैं।
+
+धन्यवाद! 🙏
+${signature}`
     );
   }
 
@@ -518,77 +559,117 @@ _डिजिटल हिसाब (Simple Hisaab)_`
 
     if (isPaid) {
       return (
-`📋 *DIGITAL HISAAB | LOAN SETTLED*
-Dear *${person.name}*, Greetings! Your Interest-Only account has been fully settled and closed.
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+ *🧾 SIMPLE HISAAB | LOAN SETTLED*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *Settlement Summary:*
-• *Given Date:* ${formattedDate}
-• *Principal Amount:* ${formatCurrency(person.principalAmount)} *(Unchanged)*
-• *Monthly Rate:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
-• *Total Duration:* ${totalMos} Months
-• *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
-${formattedPaidDate ? `• *Settlement Date:* ${formattedPaidDate}\n` : ''}• *Status: FULLY PAID & SETTLED*
+Dear *${person.name}*,
+Greetings!
+
+Your Interest-Only account has been fully settled and closed.
+
+📋 *Settlement Summary:*
+▫️ *Given Date:* ${formattedDate}
+▫️ *Principal Amount:* ${formatCurrency(person.principalAmount)} (Unchanged)
+▫️ *Monthly Rate:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
+▫️ *Total Duration:* ${totalMos} Months
+▫️ *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
+${formattedPaidDate ? `▫️ *Settlement Date:* ${formattedPaidDate}\n` : ''}▫️ *Status:* ✅ FULLY PAID & SETTLED
 
 ${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Thank you very much for the prompt settlement!
-_Digital Hisaab_`
+
+Thank you! 🙏
+${signature}`
       );
     }
 
     return (
-`📋 *DIGITAL HISAAB | INTEREST STATEMENT*
-Dear *${person.name}*, Greetings! Here is the statement for your *Interest-Only Account*:
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+ *🧾 SIMPLE HISAAB | INTEREST STATEMENT*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *Account Summary:*
-• *Loan Start Date:* ${formattedDate}
-• *Original Principal:* ${formatCurrency(person.principalAmount)} *(Unchanged)*
-• *Monthly Interest:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
-• *Billing Duration:* ${totalMos} Months (current month included)
-• *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
-• *Current Interest Due:* ${formatCurrency(dueInterest)} (${pendingMonthsCount} months pending)
+Dear *${person.name}*,
+Greetings!
 
+Here is the statement for your Interest-Only account:
+
+📋 *Account Summary:*
+▫️ *Loan Start Date:* ${formattedDate}
+▫️ *Original Principal:* ${formatCurrency(person.principalAmount)} (Unchanged)
+▫️ *Monthly Interest:* ${person.rate}% / mo (${formatCurrency(person.monthlyInterest)} / mo)
+▫️ *Billing Duration:* ${totalMos} Months (current month included)
+▫️ *Total Interest Paid:* ${formatCurrency(paidInterest)} (${paidMonthsCount} months)
+▫️ *Current Interest Due:* ${formatCurrency(dueInterest)} (${pendingMonthsCount} months pending)
+
+─────────────────────────
 💰 *Current Interest Due: ${formatCurrency(dueInterest)}*
 *(Principal: ${formatCurrency(person.principalAmount)} + Due Interest: ${formatCurrency(dueInterest)} = Total: ${formatCurrency(person.totalAmount)})*
-• *Interest Status:* ${dueInterest > 0 ? '⚠️ PENDING' : '✅ UP TO DATE'}
+─────────────────────────
+▫️ *Interest Status:* ${dueInterest > 0 ? '⏳ PENDING' : '✅ UP TO DATE'}
 
-${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Kindly arrange the monthly interest payment at your earliest convenience. Thank you!
-_Digital Hisaab_`
+${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Kindly arrange the monthly interest payment at your earliest convenience.
+
+Thank you! 🙏
+${signature}`
     );
   }
 
   if (isPaid) {
     return (
-`📋 *DIGITAL HISAAB | PAYMENT RECEIPT*
-Dear *${person.name}*, Greetings! We confirm that the full settlement for your account has been successfully received.
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+ *🧾 SIMPLE HISAAB | PAYMENT RECEIPT*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *Payment Receipt Summary:*
-• *Given Date:* ${formattedDate}
-• *Principal Amount:* ${formatCurrency(person.principalAmount)}
-• *Monthly Rate:* ${person.rate}% / month
-• *Billing Period:* ${totalMos} Months
-• *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
-• *Total Amount Settled:* ${formatCurrency(person.totalAmount)}
-${formattedPaidDate ? `• *Settlement Date:* ${formattedPaidDate}\n` : ''}• *Account Status: FULLY PAID & SETTLED*
+Dear *${person.name}*,
+Greetings!
+
+We confirm that the full settlement for your account has been successfully received.
+
+📋 *Payment Receipt Summary:*
+▫️ *Given Date:* ${formattedDate}
+▫️ *Principal Amount:* ${formatCurrency(person.principalAmount)}
+▫️ *Monthly Rate:* ${person.rate}% / month
+▫️ *Billing Period:* ${totalMos} Months
+▫️ *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
+─────────────────────────
+💰 *Total Amount Settled: ${formatCurrency(person.totalAmount)}*
+─────────────────────────
+${formattedPaidDate ? `▫️ *Settlement Date:* ${formattedPaidDate}\n` : ''}▫️ *Account Status:* ✅ FULLY PAID & SETTLED
 
 ${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Thank you very much for the prompt settlement!
-_Digital Hisaab_`
+
+Thank you! 🙏
+${signature}`
     );
   }
 
   return (
-`📋 *DIGITAL HISAAB | ACCOUNT STATEMENT*
-Dear *${person.name}*, Greetings! Here is the official simple interest statement for your account:
+`*━━━━━━━━━━━━━━━━━━━━━━━━━*
+ *🧾 SIMPLE HISAAB | ACCOUNT STATEMENT*
+*━━━━━━━━━━━━━━━━━━━━━━━━━*
 
-📌 *Account Summary:*
-• *Given Date (Dena Date):* ${formattedDate}
-• *Principal Amount:* ${formatCurrency(person.principalAmount)}
-• *Monthly Interest Rate:* ${person.rate}% / month (${formatCurrency(person.monthlyInterest)} / mo)
-• *Applicable Period:* ${totalMos} Months (current month included)
-• *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
+Dear *${person.name}*,
+Greetings!
+
+Here is the official simple interest statement for your account:
+
+📋 *Account Summary:*
+▫️ *Given Date (Dena Date):* ${formattedDate}
+▫️ *Principal Amount:* ${formatCurrency(person.principalAmount)}
+▫️ *Monthly Interest Rate:* ${person.rate}% / month (${formatCurrency(person.monthlyInterest)} / mo)
+▫️ *Applicable Period:* ${totalMos} Months (current month included)
+▫️ *Total Simple Interest:* ${formatCurrency(person.interestAmount)}
+
+─────────────────────────
 💰 *Total Amount Due: ${formatCurrency(person.totalAmount)}*
-• *Payment Status:* ⏳ PENDING
+─────────────────────────
+▫️ *Payment Status:* ⏳ PENDING
+${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}
+Kindly review the statement and arrange the payment at your earliest convenience.
+Feel free to get in touch for any queries or clarifications.
 
-${person.note ? `📝 *Note:* ${person.note}\n` : ''}${customNote ? `💬 *Message:* ${customNote}\n` : ''}Kindly review the statement and arrange the payment at your earliest convenience. Feel free to get in touch for any queries or clarifications. Thank you!
-_Digital Hisaab_`
+Thank you! 🙏
+${signature}`
   );
 }
 
