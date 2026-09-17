@@ -39,6 +39,7 @@ import {
   getStoredLanguage,
   setStoredLanguage,
   getActiveSession,
+  saveActiveSession,
   clearActiveSession,
   recordMonthlyInterestPayment,
   toggleMonthlyInterestStatus,
@@ -60,14 +61,56 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, onSnapshot } from 'firebase/firestore';
 
 export default function App() {
-  // 1. Data & User State
-  const [persons, setPersons] = useState<PersonHisaab[]>([]);
-  const [trashPersons, setTrashPersons] = useState<PersonHisaab[]>([]);
-  const [user, setUser] = useState<AppUser | null>(null);
+  // 1. Data & User State - Synchronously initialized to prevent login screen flicker on reopen/refresh
+  const [user, setUser] = useState<AppUser | null>(() => {
+    try {
+      const active = getActiveSession();
+      return active?.user || null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [persons, setPersons] = useState<PersonHisaab[]>(() => {
+    try {
+      const active = getActiveSession();
+      if (active?.user?.uid) {
+        return getPersons(active.user.uid);
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [trashPersons, setTrashPersons] = useState<PersonHisaab[]>(() => {
+    try {
+      const active = getActiveSession();
+      if (active?.user?.uid) {
+        return getTrashPersons(active.user.uid);
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-  const [lang, setLang] = useState<Language>('hi'); // Default Hindi for local relevance
-  const [theme, setTheme] = useState<ThemeMode>('light');
-  const [isAuthRestored, setIsAuthRestored] = useState(false);
+  const [lang, setLang] = useState<Language>(() => {
+    try {
+      return getStoredLanguage();
+    } catch {
+      return 'hi';
+    }
+  });
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    try {
+      return getStoredTheme();
+    } catch {
+      return 'light';
+    }
+  });
+  const [isAuthRestored, setIsAuthRestored] = useState(true);
 
   // 2. Modals State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -163,15 +206,46 @@ export default function App() {
     const loadedLang = getStoredLanguage();
     setLang(loadedLang);
 
-    // Auto-restore previous active session (Remember Me / SessionStorage)
+    // Auto-restore previous active session (Remember Me / Storage / Persistent Cookie)
     const existingSession = getActiveSession();
-    if (existingSession && existingSession.user) {
+    if (existingSession && existingSession.user && existingSession.user.uid) {
       setUser(existingSession.user);
       const userRecords = getPersons(existingSession.user.uid);
       setPersons(userRecords);
       setTrashPersons(getTrashPersons(existingSession.user.uid));
     }
     setIsAuthRestored(true);
+  }, []);
+
+  // Multi-tab session synchronization (listen for login or logout in other tabs)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'simple_hisaab_session_v1') {
+        if (!e.newValue) {
+          // Explicit logout in another tab
+          setUser(null);
+          setPersons([]);
+          setTrashPersons([]);
+          setIsAccountModalOpen(false);
+          setActiveTab('home');
+        } else {
+          // Logged in from another tab
+          try {
+            const parsed = JSON.parse(e.newValue);
+            if (parsed?.user?.uid) {
+              setUser(parsed.user);
+              setPersons(getPersons(parsed.user.uid));
+              setTrashPersons(getTrashPersons(parsed.user.uid));
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Whenever user changes, load the isolated dataset for this account
@@ -561,8 +635,10 @@ export default function App() {
   // Handle User Login Success
   const handleLoginSuccess = (loggedInUser: AppUser, isFirstTime?: boolean) => {
     setUser(loggedInUser);
+    saveActiveSession(loggedInUser, true);
     const userRecords = getPersons(loggedInUser.uid);
     setPersons(userRecords);
+    setTrashPersons(getTrashPersons(loggedInUser.uid));
     setActiveTab('home');
     if (isFirstTime) {
       addToast(
@@ -586,6 +662,7 @@ export default function App() {
     clearActiveSession();
     setUser(null);
     setPersons([]);
+    setTrashPersons([]);
     setIsAccountModalOpen(false);
     setActiveTab('home');
     addToast('info', i18n[lang].logoutSuccess);

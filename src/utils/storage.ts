@@ -454,7 +454,7 @@ export async function resetPasswordWithSecurityAnswer(
 }
 
 // -------------------------------------------------------------
-// SESSION PERSISTENCE (Remember Me & Session Storage)
+// SESSION PERSISTENCE (Persistent Storage, Cookies & Session Data)
 // -------------------------------------------------------------
 
 export interface SessionData {
@@ -463,60 +463,171 @@ export interface SessionData {
   loggedInAt: string;
 }
 
+const COOKIE_KEY_AUTH_SESSION = 'digital_hisaab_session_v1';
+
 /**
- * Save active session
+ * Persistent Cookie Helper for session survival across tab/browser/phone restarts
+ * Stores session token for 365 days with SameSite=Lax and Secure (on https).
  */
-export function saveActiveSession(user: AppUser, rememberMe: boolean): void {
+export function setPersistentSessionCookie(name: string, value: string, days = 365): void {
+  try {
+    if (typeof document === 'undefined') return;
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    const maxAge = days * 24 * 60 * 60;
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${expires}; max-age=${maxAge}; path=/; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+  } catch (err) {
+    console.warn('Could not set session cookie:', err);
+  }
+}
+
+export function getPersistentSessionCookie(name: string): string | null {
+  try {
+    if (typeof document === 'undefined') return null;
+    const prefix = `${encodeURIComponent(name)}=`;
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+      c = c.trim();
+      if (c.indexOf(prefix) === 0) {
+        return decodeURIComponent(c.substring(prefix.length));
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function removePersistentSessionCookie(name: string): void {
+  try {
+    if (typeof document === 'undefined') return;
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; path=/; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+  } catch (err) {
+    console.warn('Could not remove session cookie:', err);
+  }
+}
+
+/**
+ * Save active session permanently across browser/tab closes and phone restarts.
+ * Passwords are NEVER stored. Only sanitized AppUser metadata (uid, displayName, email, phone, photoURL, providerId).
+ */
+export function saveActiveSession(user: AppUser, rememberMe = true): void {
+  if (!user || !user.uid) return;
+
   const session: SessionData = {
-    user,
-    rememberMe,
+    user: {
+      uid: user.uid,
+      displayName: user.displayName || null,
+      email: user.email || null,
+      phoneNumber: user.phoneNumber || null,
+      photoURL: user.photoURL || null,
+      providerId: user.providerId || 'password',
+    },
+    rememberMe: true, // Always persist across tab/browser close and device reboot
     loggedInAt: new Date().toISOString(),
   };
 
+  const serialized = JSON.stringify(session);
+
+  // 1. Primary Persistent Storage: localStorage (persists on device)
   try {
-    if (rememberMe) {
-      localStorage.setItem(STORAGE_KEY_AUTH_SESSION, JSON.stringify(session));
-      sessionStorage.removeItem(STORAGE_KEY_AUTH_SESSION);
-    } else {
-      sessionStorage.setItem(STORAGE_KEY_AUTH_SESSION, JSON.stringify(session));
-      localStorage.removeItem(STORAGE_KEY_AUTH_SESSION);
-    }
+    localStorage.setItem(STORAGE_KEY_AUTH_SESSION, serialized);
   } catch (err) {
-    console.error('Error saving session:', err);
+    console.error('Error saving session to localStorage:', err);
+  }
+
+  // 2. Secondary session cache: sessionStorage
+  try {
+    sessionStorage.setItem(STORAGE_KEY_AUTH_SESSION, serialized);
+  } catch {
+    // ignore
+  }
+
+  // 3. Persistent Cookie (365 days expiration)
+  try {
+    setPersistentSessionCookie(COOKIE_KEY_AUTH_SESSION, serialized, 365);
+  } catch (err) {
+    console.warn('Error saving session cookie:', err);
   }
 }
 
 /**
- * Restore active session if available
+ * Restore active session if available across localStorage, persistent Cookies, and sessionStorage.
+ * Validates session integrity before returning.
  */
 export function getActiveSession(): SessionData | null {
+  // 1. Primary check: localStorage (survives tab close, browser close, phone restart)
   try {
-    // Check sessionStorage first
-    const sessionRaw = sessionStorage.getItem(STORAGE_KEY_AUTH_SESSION);
-    if (sessionRaw) {
-      return JSON.parse(sessionRaw);
-    }
-    // Check localStorage (Remember Me)
     const localRaw = localStorage.getItem(STORAGE_KEY_AUTH_SESSION);
     if (localRaw) {
-      return JSON.parse(localRaw);
+      const parsed = JSON.parse(localRaw);
+      if (parsed && parsed.user && typeof parsed.user.uid === 'string' && parsed.user.uid.length > 0) {
+        return parsed;
+      }
     }
-    return null;
   } catch (err) {
-    console.error('Error reading session:', err);
-    return null;
+    console.warn('Error reading session from localStorage:', err);
   }
+
+  // 2. Secondary check: Persistent Cookie fallback
+  try {
+    const cookieRaw = getPersistentSessionCookie(COOKIE_KEY_AUTH_SESSION);
+    if (cookieRaw) {
+      const parsed = JSON.parse(cookieRaw);
+      if (parsed && parsed.user && typeof parsed.user.uid === 'string' && parsed.user.uid.length > 0) {
+        // Re-hydrate localStorage so subsequent synchronous reads are immediate
+        try {
+          localStorage.setItem(STORAGE_KEY_AUTH_SESSION, cookieRaw);
+        } catch {}
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('Error reading session from cookie:', err);
+  }
+
+  // 3. Tertiary check: sessionStorage fallback
+  try {
+    const sessionRaw = sessionStorage.getItem(STORAGE_KEY_AUTH_SESSION);
+    if (sessionRaw) {
+      const parsed = JSON.parse(sessionRaw);
+      if (parsed && parsed.user && typeof parsed.user.uid === 'string' && parsed.user.uid.length > 0) {
+        // Re-hydrate localStorage for future persistence
+        try {
+          localStorage.setItem(STORAGE_KEY_AUTH_SESSION, sessionRaw);
+        } catch {}
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('Error reading session from sessionStorage:', err);
+  }
+
+  return null;
 }
 
 /**
- * Clear active session on logout
+ * Clear active session on explicit user logout.
+ * Clears localStorage, sessionStorage, and persistent cookies.
  */
 export function clearActiveSession(): void {
   try {
-    sessionStorage.removeItem(STORAGE_KEY_AUTH_SESSION);
     localStorage.removeItem(STORAGE_KEY_AUTH_SESSION);
   } catch (err) {
-    console.error('Error clearing session:', err);
+    console.error('Error clearing localStorage session:', err);
+  }
+
+  try {
+    sessionStorage.removeItem(STORAGE_KEY_AUTH_SESSION);
+  } catch {
+    // ignore
+  }
+
+  try {
+    removePersistentSessionCookie(COOKIE_KEY_AUTH_SESSION);
+  } catch (err) {
+    console.warn('Error clearing session cookie:', err);
   }
 }
 

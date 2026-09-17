@@ -47,9 +47,17 @@ googleProvider.setCustomParameters({
 });
 
 /**
- * Ensure an active Firebase auth session exists (silent anonymous fallback for Firestore rules)
+ * Ensure an active Firebase auth session exists (preserves restored Google sessions and provides silent anonymous fallback for Firestore rules)
  */
 export async function ensureFirebaseAuth(): Promise<User | null> {
+  if (auth.currentUser) return auth.currentUser;
+  try {
+    if (typeof (auth as any).authStateReady === 'function') {
+      await (auth as any).authStateReady();
+    }
+  } catch {
+    // continue
+  }
   if (auth.currentUser) return auth.currentUser;
   try {
     const cred = await signInAnonymously(auth);

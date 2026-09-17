@@ -1,0 +1,20 @@
+{
+  "name": "Digital Hisaab - बहीखाता व ब्याज प्रबंधन",
+  "short_name": "Digital Hisaab",
+  "description": "Digital Hisaab Management System for loan ledgers, interest calculations, vouchers, and borrower management.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#d97706",
+  "categories": ["finance", "business", "utilities"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

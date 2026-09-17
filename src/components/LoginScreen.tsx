@@ -27,6 +27,7 @@ import {
   createDemoAccount,
   getAccountSecurityQuestions,
   resetPasswordWithTwoSecurityAnswers,
+  saveActiveSession,
 } from '../utils/storage';
 import { signInWithGoogle } from '../lib/firebase';
 
@@ -119,6 +120,8 @@ export function LoginScreen({
           providerId: 'password',
         };
 
+        saveActiveSession(appUser, true);
+
         setSuccessMessage(
           lang === 'hi'
             ? `स्वागत है, ${appUser.displayName}! लॉगिन सफल रहा।`
@@ -205,6 +208,8 @@ export function LoginScreen({
           photoURL: null,
           providerId: 'password',
         };
+
+        saveActiveSession(appUser, true);
 
         setSuccessMessage(
           lang === 'hi'
@@ -326,6 +331,8 @@ export function LoginScreen({
         providerId: 'google.com',
       };
 
+      saveActiveSession(appUser, true);
+
       setSuccessMessage(lang === 'hi' ? 'Google लॉगिन सफल रहा!' : 'Google Sign-In Successful!');
       setTimeout(() => {
         onLoginSuccess(appUser);
@@ -351,6 +358,7 @@ export function LoginScreen({
     setIsLoading(true);
     try {
       const demoUser = await createDemoAccount();
+      saveActiveSession(demoUser, true);
       setSuccessMessage(lang === 'hi' ? 'डेमो खाता लोड हो रहा है...' : 'Loading demo account...');
       setTimeout(() => {
         onLoginSuccess(demoUser);
@@ -366,6 +374,7 @@ export function LoginScreen({
     setIsLoading(true);
     try {
       const guestUser = await createQuickGuestAccount();
+      saveActiveSession(guestUser, true);
       setSuccessMessage(lang === 'hi' ? 'अतिथि खाता सक्रिय...' : 'Guest mode active...');
       setTimeout(() => {
         onLoginSuccess(guestUser);
